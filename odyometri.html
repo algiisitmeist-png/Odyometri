@@ -311,6 +311,7 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
       <button class="nav-tab" id="tabAudio" onclick="showScreen('sAudiometry')" disabled>📊 Odyogram</button>
       <button class="nav-tab" id="tabSpeech" onclick="showScreen('sSpeech')" disabled>🗣️ Konuşma</button>
       <button class="nav-tab" id="tabResult" onclick="showScreen('sResult')" disabled>📋 Sonuç</button>
+      <button class="nav-tab" onclick="showScreen('sSettings')">⚙️ Ayarlar</button>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="testAudioOutput()" id="audioTestBtn" title="Bluetooth kulaklık bağlantısını test et">🎧 Ses Test</button>
     <button class="btn btn-ghost btn-sm" onclick="exportXML()">⬇ XML</button>
@@ -599,6 +600,61 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
   </div>
 </div>
 
+<!-- ═══ SCREEN 5: AYARLAR ═══ -->
+<div class="screen" id="sSettings">
+  <div style="display:flex;align-items:center;justify-content:center;flex:1;background:var(--gray);padding:32px">
+    <div style="background:#fff;border-radius:20px;padding:40px 44px;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:8px">Ayarlar</div>
+      <h2 style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--gray);margin-bottom:6px">Google TTS Ayarları</h2>
+      <p style="font-size:14px;color:var(--gray-mid);margin-bottom:28px">API key yalnızca bu cihazda saklanır, sunucuya gönderilmez.</p>
+
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Google Cloud TTS API Key</label>
+        <input type="password" id="settingsApiKey" placeholder="AIza..."
+          style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--gray);outline:none">
+        <div style="margin-top:6px;display:flex;gap:8px">
+          <button onclick="toggleApiKeyVisibility()" style="font-size:12px;background:none;border:none;color:var(--gray-mid);cursor:pointer;text-decoration:underline">Göster/Gizle</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Ses Hızı</label>
+        <input type="range" id="settingsTtsSpeed" min="0.5" max="1.2" step="0.05" value="0.85"
+          oninput="document.getElementById('ttsSpeedVal').textContent=this.value"
+          style="width:100%;accent-color:var(--red)">
+        <div style="text-align:center;font-size:14px;font-weight:700;color:var(--gray-mid)" id="ttsSpeedVal">0.85</div>
+      </div>
+
+      <div style="margin-bottom:28px">
+        <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Ses Testi</label>
+        <button onclick="testGoogleTTS()" style="padding:12px 20px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray)">
+          ▶ Test: "Merhaba, bu bir ses testidir."
+        </button>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="saveSettings()" style="flex:1;padding:14px;border-radius:10px;border:none;background:var(--red);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">
+          ✓ Kaydet
+        </button>
+        <button onclick="showScreen('sPatient')" style="padding:14px 20px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;color:var(--gray-mid)">
+          ← Geri
+        </button>
+      </div>
+
+      <div id="settingsStatus" style="margin-top:16px;font-size:13px;text-align:center;min-height:20px"></div>
+
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gray-mid);line-height:1.7">
+          <strong>API key nasıl alınır?</strong><br>
+          1. console.cloud.google.com → APIs & Services → Credentials<br>
+          2. Cloud Text-to-Speech API'nin etkin olduğunu kontrol edin<br>
+          3. "Create Credentials" → "API Key" → kopyalayın
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end .app -->
 
 <script>
@@ -699,6 +755,8 @@ let STATE = {
   maskGain: null,
   maskPanNode: null,
   ttsVoice: null,
+  googleTtsKey: null,
+  ttsSpeed: 0.85,
   spTimer: null
 };
 
@@ -731,11 +789,12 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const map = {sPatient:0,sAudiometry:1,sSpeech:2,sResult:3};
+  const map = {sPatient:0,sAudiometry:1,sSpeech:2,sResult:3,sSettings:4};
   const tabs = document.querySelectorAll('.nav-tab');
   if(map[id] !== undefined) tabs[map[id]].classList.add('active');
   stopAll();
   if(id === 'sResult') buildResult();
+  if(id === 'sSettings') openSettings();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1249,10 +1308,8 @@ function showSpeechWord(){
   document.getElementById('spCorrectBtn').style.opacity='.4';
   document.getElementById('spWrongBtn').style.opacity='.4';
   resetSpTimer();
-  const utt=new SpeechSynthesisUtterance(`${idx+1}. kelime: ${word}`);
-  utt.lang='tr-TR';utt.rate=0.82;utt.pitch=1.1;utt.volume=1;
-  if(STATE.ttsVoice) utt.voice=STATE.ttsVoice;
-  utt.onend=()=>{
+  // Google TTS ile oku
+  googleSpeak(`${idx+1}. kelime: ${word}`, ()=>{
     document.getElementById('spWordStatus').textContent='🎤 Hasta tekrarlıyor…';
     startSpTimer(3000,()=>{
       document.getElementById('spWordStatus').textContent='✏️ İşaretleyin';
@@ -1261,9 +1318,7 @@ function showSpeechWord(){
       document.getElementById('spCorrectBtn').style.opacity='1';
       document.getElementById('spWrongBtn').style.opacity='1';
     });
-  };
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utt);
+  });
 }
 
 function replaySpeechWord(){
@@ -1274,21 +1329,15 @@ function replaySpeechWord(){
   document.getElementById('spWrongBtn').disabled=true;
   document.getElementById('spCorrectBtn').style.opacity='.4';
   document.getElementById('spWrongBtn').style.opacity='.4';
-  const utt=new SpeechSynthesisUtterance(`${idx+1}. kelime: ${word}`);
-  utt.lang='tr-TR';utt.rate=0.82;utt.pitch=1.1;
-  if(STATE.ttsVoice) utt.voice=STATE.ttsVoice;
-  utt.onend=()=>{
+  googleSpeak(`${idx+1}. kelime: ${word}`, ()=>{
     document.getElementById('spCorrectBtn').disabled=false;
     document.getElementById('spWrongBtn').disabled=false;
     document.getElementById('spCorrectBtn').style.opacity='1';
     document.getElementById('spWrongBtn').style.opacity='1';
-  };
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utt);
+  });
 }
 
 function markSpeech(correct){
-  speechSynthesis.cancel();
   resetSpTimer();
   STATE.speech.results.push(correct);
   const dot=document.getElementById('spDot_'+STATE.speech.wordIdx);
@@ -1436,6 +1485,57 @@ async function testAudioOutput() {
     btn.textContent = '🎧 Ses Test';
     btn.disabled = false;
   }, 1500);
+}
+
+// ════════════════════════════════════════════════════════════
+// AYARLAR — Google TTS
+// ════════════════════════════════════════════════════════════
+function saveSettings() {
+  const key = document.getElementById('settingsApiKey').value.trim();
+  const speed = document.getElementById('settingsTtsSpeed').value;
+  if (key) {
+    localStorage.setItem('gtts_api_key', key);
+    STATE.googleTtsKey = key;
+  }
+  localStorage.setItem('gtts_speed', speed);
+  STATE.ttsSpeed = parseFloat(speed);
+  document.getElementById('settingsStatus').innerHTML =
+    '<span style="color:var(--success);font-weight:700">✓ Kaydedildi</span>';
+  setTimeout(() => {
+    document.getElementById('settingsStatus').textContent = '';
+  }, 2000);
+  showToast('Ayarlar kaydedildi', 'success');
+}
+
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('settingsApiKey');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+async function testGoogleTTS() {
+  const key = document.getElementById('settingsApiKey').value.trim()
+    || localStorage.getItem('gtts_api_key');
+  if (!key) {
+    document.getElementById('settingsStatus').innerHTML =
+      '<span style="color:var(--red)">Önce API key girin</span>';
+    return;
+  }
+  STATE.googleTtsKey = key;
+  document.getElementById('settingsStatus').innerHTML =
+    '<span style="color:var(--gray-mid)">⏳ Test ediliyor…</span>';
+  await googleSpeak('Merhaba, bu bir ses testidir. Bir, iki, üç.', () => {
+    document.getElementById('settingsStatus').innerHTML =
+      '<span style="color:var(--success);font-weight:700">✓ Google TTS çalışıyor!</span>';
+  });
+}
+
+// Settings ekranı açıldığında mevcut değerleri doldur
+function openSettings() {
+  const key = localStorage.getItem('gtts_api_key') || '';
+  const speed = localStorage.getItem('gtts_speed') || '0.85';
+  document.getElementById('settingsApiKey').value = key;
+  document.getElementById('settingsTtsSpeed').value = speed;
+  document.getElementById('ttsSpeedVal').textContent = speed;
 }
 
 // ════════════════════════════════════════════════════════════
