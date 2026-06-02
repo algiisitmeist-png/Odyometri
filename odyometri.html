@@ -770,16 +770,81 @@ window.addEventListener('load', () => {
 });
 
 function loadTTSVoice() {
-  if (!('speechSynthesis' in window)) return;
-  function tryLoad() {
-    const voices = speechSynthesis.getVoices();
-    const tr = voices.filter(v => v.lang.startsWith('tr'));
-    STATE.ttsVoice = tr.find(v =>
-      /female|kadın|zeynep|filiz|yelda/i.test(v.name)
-    ) || tr[0] || null;
+  const saved = localStorage.getItem('gtts_api_key');
+  if (saved) STATE.googleTtsKey = saved;
+  const speed = localStorage.getItem('gtts_speed');
+  if (speed) STATE.ttsSpeed = parseFloat(speed);
+}
+
+// ════════════════════════════════════════════════════════════
+// GOOGLE TTS
+// ════════════════════════════════════════════════════════════
+async function googleSpeak(text, onEnd) {
+  const key = STATE.googleTtsKey || localStorage.getItem('gtts_api_key');
+  const speed = STATE.ttsSpeed || 0.85;
+  if (!key) {
+    webSpeechFallback(text, onEnd);
+    return;
   }
-  tryLoad();
-  speechSynthesis.onvoiceschanged = tryLoad;
+  try {
+    const response = await fetch(
+      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${key}`,
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          input: { text: text },
+          voice: {
+            languageCode: 'tr-TR',
+            name: 'tr-TR-Wavenet-E',
+            ssmlGender: 'FEMALE'
+          },
+          audioConfig: {
+            audioEncoding: 'MP3',
+            speakingRate: speed,
+            pitch: 0.0,
+            effectsProfileId: ['headphone-class-device']
+          }
+        })
+      }
+    );
+    if (!response.ok) {
+      const err = await response.json();
+      console.error('Google TTS error:', JSON.stringify(err));
+      webSpeechFallback(text, onEnd);
+      return;
+    }
+    const data = await response.json();
+    const binary = atob(data.audioContent);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const c = getACtx();
+    await c.resume();
+    const audioBuffer = await c.decodeAudioData(bytes.buffer);
+    const src = c.createBufferSource();
+    const pan = c.createStereoPanner();
+    pan.pan.value = (STATE.speech && STATE.speech.ear === 'left') ? -1 : 1;
+    src.buffer = audioBuffer;
+    src.connect(pan);
+    pan.connect(c.destination);
+    src.start();
+    src.onended = () => { if (onEnd) onEnd(); };
+  } catch(e) {
+    console.error('Google TTS fetch error:', e);
+    webSpeechFallback(text, onEnd);
+  }
+}
+
+function webSpeechFallback(text, onEnd) {
+  if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'tr-TR';
+  utt.rate = STATE.ttsSpeed || 0.85;
+  utt.pitch = 1.1;
+  utt.onend = () => { if (onEnd) onEnd(); };
+  utt.onerror = () => { if (onEnd) onEnd(); };
+  speechSynthesis.speak(utt);
 }
 
 // ════════════════════════════════════════════════════════════
