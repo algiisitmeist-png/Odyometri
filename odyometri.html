@@ -26,18 +26,17 @@
   --shadow-lg: 0 8px 40px rgba(26,26,46,.14);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{height:100%;overflow:hidden}
-body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakarta Sans',sans-serif;color:var(--gray)}
+html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakarta Sans',sans-serif;color:var(--gray)}
 
 /* ═══════════════════════════════════════
-   LAYOUT — ThinkPad T14 optimized
-   1920x1080 veya 1366x768 landscape
+   LAYOUT — ThinkPad T14
+   1920x1080 / 1366x768
 ═══════════════════════════════════════ */
 .app{
   display:flex;
   flex-direction:column;
-  position:fixed;
-  inset:0;
+  width:100vw;
+  height:100vh;
   background:#f0f0f6;
   overflow:hidden;
 }
@@ -57,8 +56,17 @@ body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakarta Sa
 .topbar-actions{display:flex;gap:8px}
 
 /* SCREENS */
-.screen{display:none;flex:1;overflow:hidden;min-height:0}
-.screen.active{display:flex;flex-direction:column;flex:1;min-height:0}
+.screen{
+  display:none !important;
+  flex:1;overflow:hidden;min-height:0;
+  width:100%;
+}
+.screen.active{
+  display:flex !important;
+  flex-direction:column;
+  flex:1;min-height:0;
+  overflow:hidden;
+}
 
 /* ═══════════════════════════════════════
    SCREEN 1 — HASTA KAYDI
@@ -808,11 +816,18 @@ let STATE = {
     right: {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null},
     left:  {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null}
   },
-  // Konuşma testi
+  // Konuşma testi — her kulak için ayrı durum
   speech: {
     ear: 'right',
     srt: {right:null, left:null},
     scores: {right:null, left:null},
+    speechDb: null,
+    // Her kulak için ayrı kelime listesi ve ilerleme
+    earState: {
+      right: { wordIdx:0, wordList:[], results:[], started:false },
+      left:  { wordIdx:0, wordList:[], results:[], started:false }
+    },
+    // Aktif kulağın shortcut'ları
     wordIdx: 0,
     wordList: [],
     results: []
@@ -1477,9 +1492,24 @@ function setSpeechEar(ear) {
     const hint = document.getElementById('speechPtaHint');
     if(hint) hint.textContent = `PTA ${pta} dB + 20 = ${srtDb} dB (başlangıç)`;
   } else {
-    // PTA yoksa varsayılan
     if(!STATE.speech.speechDb) STATE.speech.speechDb = 65;
     updateSpeechDbDisplay();
+  }
+  // Start butonunu güncelle — kaldığı yerden devam et
+  const es = STATE.speech.earState[ear];
+  const startBtn = document.getElementById('spStartBtn');
+  if(startBtn) {
+    startBtn.disabled = false;
+    startBtn.style.opacity = '1';
+    if(es.started && es.wordIdx > 0 && es.wordIdx < 25) {
+      startBtn.textContent = `▶ Devam Et (${es.wordIdx}/25)`;
+    } else if(es.wordIdx >= 25) {
+      startBtn.textContent = '✓ Tamamlandı';
+      startBtn.style.background = 'var(--success)';
+    } else {
+      startBtn.textContent = '▶ Başlat';
+      startBtn.style.background = 'var(--gray)';
+    }
   }
 }
 
@@ -1545,16 +1575,39 @@ function saveSrt(){
 
 // Kelime testi
 function startWordTest(){
-  const ear=STATE.speech.ear;
-  const listKey=ear==='right'?'A':'B';
-  STATE.speech.wordList=[...WORD_LISTS[listKey]];
-  shuffle(STATE.speech.wordList);
-  STATE.speech.wordIdx=0;
-  STATE.speech.results=[];
+  const ear = STATE.speech.ear;
+  const es = STATE.speech.earState[ear];
+
+  if (!es.started || es.wordIdx === 0) {
+    // İlk kez başlatılıyor — listeyi hazırla
+    const listKey = ear==='right' ? 'A' : 'B';
+    es.wordList = [...WORD_LISTS[listKey]];
+    shuffle(es.wordList);
+    es.wordIdx = 0;
+    es.results = [];
+    es.started = true;
+  }
+
+  // Aktif kulağın state'ini genel state'e bağla
+  STATE.speech.wordList = es.wordList;
+  STATE.speech.wordIdx = es.wordIdx;
+  STATE.speech.results = es.results;
+
   buildScoreDots();
+  // Tamamlanan kelimeler için dotları doldur
+  es.results.forEach((r,i) => {
+    const dot = document.getElementById('spDot_'+i);
+    if(dot){
+      dot.style.background = r ? 'var(--success-light)' : 'var(--red-light)';
+      dot.style.color = r ? 'var(--success)' : 'var(--red)';
+      dot.textContent = r ? '✓' : '✗';
+    }
+  });
+
   document.getElementById('spStartBtn').disabled=true;
   document.getElementById('spStartBtn').style.opacity='.4';
-  // Prev/restart aktifleştir
+  document.getElementById('spStartBtn').textContent = es.wordIdx > 0 ? '▶ Devam Et' : '▶ Başlat';
+
   const prevBtn=document.getElementById('spPrevBtn');
   const restartBtn=document.getElementById('spRestartBtn');
   if(prevBtn){prevBtn.disabled=false;prevBtn.style.opacity='1';}
@@ -1618,6 +1671,11 @@ function replaySpeechWord(){
 function markSpeech(correct){
   resetSpTimer();
   STATE.speech.results.push(correct);
+  // earState'i de güncelle
+  const es = STATE.speech.earState[STATE.speech.ear];
+  es.results = STATE.speech.results;
+  es.wordIdx = STATE.speech.wordIdx + 1;
+
   const dot=document.getElementById('spDot_'+STATE.speech.wordIdx);
   if(dot){
     dot.style.background=correct?'var(--success-light)':'var(--red-light)';
@@ -1631,10 +1689,13 @@ function markSpeech(correct){
 // Önceki kelimeye dön
 function goPrevWord(){
   if(STATE.speech.wordIdx <= 0) return;
-  // Son sonucu geri al
   STATE.speech.results.pop();
   STATE.speech.wordIdx--;
-  // Dot'u sıfırla
+  // earState güncelle
+  const es = STATE.speech.earState[STATE.speech.ear];
+  es.results = STATE.speech.results;
+  es.wordIdx = STATE.speech.wordIdx;
+  // Dot sıfırla
   const dot = document.getElementById('spDot_'+STATE.speech.wordIdx);
   if(dot){
     dot.style.background='#e8e8f0';
@@ -1647,8 +1708,16 @@ function goPrevWord(){
 // Başa dön
 function restartWordTest(){
   if(!confirm('Kelime testini baştan başlatmak istiyor musunuz?')) return;
-  STATE.speech.wordIdx=0;
-  STATE.speech.results=[];
+  const ear = STATE.speech.ear;
+  const es = STATE.speech.earState[ear];
+  const listKey = ear==='right' ? 'A' : 'B';
+  es.wordList = [...WORD_LISTS[listKey]];
+  shuffle(es.wordList);
+  es.wordIdx = 0;
+  es.results = [];
+  STATE.speech.wordList = es.wordList;
+  STATE.speech.wordIdx = 0;
+  STATE.speech.results = [];
   buildScoreDots();
   showSpeechWord();
 }
