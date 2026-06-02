@@ -686,11 +686,12 @@ const FREQ_LABELS = ['1k','2k','4k','8k','500','250'];
 //
 // Temel gainler (1kHz referans, AKG N60 için -16 dB hassasiyet düzeltmeli):
 const BASE_GAINS_1K = {
-  80: 0.178262,
-  65: 0.033853,
-  50: 0.006073,
-  35: 0.001068,
-  20: 0.000169
+  // Beats by Dr. Dre Pro kalibrasyonu (-15 dB AKG N60 bazından)
+  80: 0.031700,
+  65: 0.006020,
+  50: 0.001080,
+  35: 0.000190,
+  20: 0.000030
 };
 
 // ISO 389-8 RETSPL + AKG N60 frekans yanıtı düzeltme çarpanları
@@ -1376,7 +1377,7 @@ function showSpeechWord(){
   // Google TTS ile oku
   googleSpeak(`${idx+1}. kelime: ${word}`, ()=>{
     document.getElementById('spWordStatus').textContent='🎤 Hasta tekrarlıyor…';
-    startSpTimer(3000,()=>{
+    startSpTimer(2000,()=>{
       document.getElementById('spWordStatus').textContent='✏️ İşaretleyin';
       document.getElementById('spCorrectBtn').disabled=false;
       document.getElementById('spWrongBtn').disabled=false;
@@ -1425,7 +1426,41 @@ function finishSpeechEar(){
   document.getElementById('wordNumLabel').textContent='TEST TAMAMLANDI';
   document.getElementById('spCorrectBtn').disabled=true;
   document.getElementById('spWrongBtn').disabled=true;
+  document.getElementById('spStartBtn').disabled=false;
+  document.getElementById('spStartBtn').style.opacity='1';
   showToast(`${ear==='right'?'Sağ':'Sol'} kulak: %${pct} doğru`,'success');
+
+  // Diğer kulağa geçiş uyarısı
+  const otherEar = ear==='right'?'left':'right';
+  const otherLabel = otherEar==='right'?'Sağ':'Sol';
+  const alreadyDone = STATE.speech.scores[otherEar];
+
+  if(!alreadyDone){
+    setTimeout(()=>{
+      const go = confirm(
+        `${ear==='right'?'Sağ':'Sol'} kulak tamamlandı — %${pct} doğru.
+
+` +
+        `Şimdi ${otherLabel} kulağı test etmek ister misiniz?
+` +
+        `Kulaklığı ${otherLabel} kulağa geçirin ve Tamam'a basın.`
+      );
+      if(go){
+        setSpeechEar(otherEar);
+        // SRT sıfırla
+        srtDb = 50;
+        document.getElementById('srtDbDisplay').textContent = srtDb;
+        document.getElementById('srtSaved').textContent = '';
+        document.getElementById('spWordText').textContent = '—';
+        document.getElementById('spWordStatus').textContent = '';
+        document.getElementById('wordNumLabel').textContent = 'KELİME 1 / 25';
+        buildScoreDots();
+        document.getElementById('spStartBtn').textContent = '▶ Başlat';
+      }
+    }, 800);
+  } else {
+    showToast('Her iki kulak tamamlandı!', 'success');
+  }
 }
 
 function startSpTimer(ms,onDone){
