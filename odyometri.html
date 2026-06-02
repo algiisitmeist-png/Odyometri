@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1024, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Profesyonel Odyometri | Algı İşitme</title>
@@ -92,7 +92,7 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 
 /* Sol panel — kontroller */
 .ctrl-panel{
-  width:272px;flex-shrink:0;background:#fff;
+  width:290px;flex-shrink:0;background:#fff;
   border-right:1px solid var(--border);
   display:flex;flex-direction:column;overflow-y:auto;
 }
@@ -281,16 +281,7 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
   /* Ensure buttons are tappable */
   button{min-height:44px}
 }
-/* Landscape lock hint */
-@media(orientation:portrait){
-  body::before{
-    content:"Lütfen iPad'i yatay (landscape) konuma getirin";
-    position:fixed;inset:0;background:#1a1a2e;color:#fff;
-    display:flex;align-items:center;justify-content:center;
-    font-size:18px;font-family:sans-serif;text-align:center;
-    padding:40px;z-index:9999;
-  }
-}
+
 </style>
 </head>
 <body>
@@ -475,19 +466,25 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
     <div class="result-bar">
       <div class="result-item">
         <div class="result-dot" style="background:var(--right-color)"></div>
-        <span>Sağ kulak (O) — hava yolu</span>
+        <span>Sağ kulak (O)</span>
       </div>
       <div class="result-item">
         <div class="result-dot" style="background:var(--left-color)"></div>
-        <span>Sol kulak (X) — hava yolu</span>
+        <span>Sol kulak (X)</span>
       </div>
       <div class="result-item">
         <div class="result-dot" style="background:var(--mask-right);border-radius:2px"></div>
-        <span>Sağ maskelenmiş (▪)</span>
+        <span>Maskelenmiş sağ (▪)</span>
       </div>
       <div class="result-item">
         <div class="result-dot" style="background:var(--mask-left);border-radius:2px"></div>
-        <span>Sol maskelenmiş (▪)</span>
+        <span>Maskelenmiş sol (▪)</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:12px;font-size:11px;color:var(--gray-mid)">
+        <span title="Boşluk: Ses çal/durdur"><kbd style="background:var(--gray-light);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">Space</kbd> Çal</span>
+        <span title="↑↓: dB ayarla"><kbd style="background:var(--gray-light);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">↑↓</kbd> dB</span>
+        <span title="←→: Frekans değiştir"><kbd style="background:var(--gray-light);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">←→</kbd> Freq</span>
+        <span title="Enter: Kaydet"><kbd style="background:var(--gray-light);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">Enter</kbd> Kaydet</span>
       </div>
     </div>
   </div>
@@ -496,52 +493,60 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 <!-- ═══ SCREEN 3: KONUŞMA TESTİ ═══ -->
 <div class="screen" id="sSpeech">
   <div class="speech-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:6px">Konuşmayı Anlama Testi</div>
-        <h2 style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--gray)">Kelime Tanıma Testi</h2>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Konuşmayı Anlama Testi</div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--gray)">Kelime Tanıma Testi</h2>
       </div>
-      <button onclick="showScreen('sAudiometry')" class="btn btn-sm" style="background:var(--gray-light);color:var(--gray);border:none">← Odyogram</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:11px;color:var(--gray-mid);background:var(--gray-light);padding:4px 10px;border-radius:6px">
+          <kbd style="font-family:inherit">Enter</kbd>=Doğru &nbsp; <kbd style="font-family:inherit">Space</kbd>=Yanlış
+        </div>
+        <button onclick="showScreen('sAudiometry')" class="btn btn-sm" style="background:var(--gray-light);color:var(--gray);border:none">← Odyogram</button>
+      </div>
     </div>
 
-    <!-- Kulak seçimi -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+    <!-- Kulak seçimi — aktif kulak belirtilir -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <button onclick="setSpeechEar('right')" id="spEarRight"
-        style="padding:14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-mid);transition:all .2s">
+        style="padding:14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-mid);transition:all .2s;position:relative">
         👂 Sağ Kulak
+        <span id="spEarRightDone" style="display:none;position:absolute;top:6px;right:8px;font-size:10px;background:var(--success);color:#fff;padding:2px 6px;border-radius:10px">✓ Tamamlandı</span>
       </button>
       <button onclick="setSpeechEar('left')" id="spEarLeft"
-        style="padding:14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-mid);transition:all .2s">
+        style="padding:14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-mid);transition:all .2s;position:relative">
         👂 Sol Kulak
+        <span id="spEarLeftDone" style="display:none;position:absolute;top:6px;right:8px;font-size:10px;background:var(--success);color:#fff;padding:2px 6px;border-radius:10px">✓ Tamamlandı</span>
       </button>
     </div>
+
+    <!-- Aktif kulak göstergesi -->
+    <div id="spActiveEarBadge" style="display:none;background:var(--gray);color:#fff;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;margin-bottom:14px;text-align:center"></div>
 
     <!-- SRT bölümü -->
     <div style="background:var(--gray-light);border-radius:14px;padding:20px;margin-bottom:18px">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:12px">SRT Tespiti — Konuşma Testi</div>
 
-      <!-- dB seviye butonları -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="srtLevelBtns">
-        <button onclick="setSrtLevel(65)" id="srtBtn65"
-          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
-          65 dB
-        </button>
-        <button onclick="setSrtLevel(75)" id="srtBtn75"
-          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
-          75 dB
-        </button>
-        <button onclick="setSrtLevel(85)" id="srtBtn85"
-          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
-          85 dB
-        </button>
-        <button onclick="setSrtLevel(95)" id="srtBtn95"
-          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
-          95 dB
-        </button>
-        <button onclick="setSrtLevel(105)" id="srtBtn105"
-          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
-          105 dB
-        </button>
+      <!-- dB dropdown seçici -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="font-size:12px;color:var(--gray-mid);font-weight:600">Seviye seç:</div>
+        <div style="position:relative">
+          <select id="srtLevelSelect" onchange="setSrtLevel(+this.value)"
+            style="appearance:none;-webkit-appearance:none;padding:10px 36px 10px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray);cursor:pointer;outline:none">
+            <option value="50">50 dB</option>
+            <option value="55">55 dB</option>
+            <option value="60">60 dB</option>
+            <option value="65" selected>65 dB</option>
+            <option value="70">70 dB</option>
+            <option value="75">75 dB</option>
+            <option value="80">80 dB</option>
+            <option value="85">85 dB</option>
+            <option value="90">90 dB</option>
+            <option value="95">95 dB</option>
+            <option value="100">100 dB</option>
+          </select>
+          <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-mid)">▼</div>
+        </div>
       </div>
 
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -596,7 +601,7 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
       <!-- Dots -->
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" id="spScoreDots"></div>
 
-      <!-- Butonlar -->
+      <!-- Ana butonlar -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <button onclick="startWordTest()" id="spStartBtn"
           style="padding:14px;border-radius:10px;border:none;background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
@@ -604,17 +609,26 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
         </button>
         <button onclick="markSpeech(true)" id="spCorrectBtn" disabled
           style="padding:14px;border-radius:10px;border:2px solid #b8e0cc;background:#fff;color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;opacity:.4">
-          ✅ Doğru
+          ✅ Doğru <small style="font-size:10px;opacity:.7">[Enter]</small>
         </button>
         <button onclick="markSpeech(false)" id="spWrongBtn" disabled
           style="padding:14px;border-radius:10px;border:2px solid #fecdd3;background:#fff;color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;opacity:.4">
-          ❌ Yanlış
+          ❌ Yanlış <small style="font-size:10px;opacity:.7">[Space]</small>
         </button>
       </div>
 
-      <div style="text-align:center;margin-top:10px">
-        <button onclick="replaySpeechWord()" style="font-size:12px;background:none;border:none;color:var(--gray-mid);cursor:pointer;text-decoration:underline">
+      <!-- Yardımcı butonlar -->
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="replaySpeechWord()" style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer">
           🔄 Tekrar Oku
+        </button>
+        <button onclick="goPrevWord()" id="spPrevBtn" disabled
+          style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer;opacity:.4">
+          ← Önceki Kelime
+        </button>
+        <button onclick="restartWordTest()" id="spRestartBtn" disabled
+          style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer;opacity:.4">
+          ↺ Başa Dön
         </button>
       </div>
     </div>
@@ -813,7 +827,88 @@ window.addEventListener('load', () => {
   buildFreqGrid();
   renderAudiogram();
   loadTTSVoice();
+  initKeyboard();
 });
+
+// ════════════════════════════════════════════════════════════
+// KLAVYE KISAYOLLARI (ThinkPad T14)
+// ════════════════════════════════════════════════════════════
+function initKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    const screen = document.querySelector('.screen.active');
+    if (!screen) return;
+    const sid = screen.id;
+
+    // ── SAF SES ODYOMETRİSİ ──
+    if (sid === 'sAudiometry') {
+      // Input/select odaklıysa klavyeyi geçme
+      if (['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      switch(e.code) {
+        case 'Space':
+          e.preventDefault();
+          if (!STATE.playing) startTone();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          stepDb(+5);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          stepDb(-5);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          navigateFreq(+1);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          navigateFreq(-1);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          savePoint();
+          break;
+      }
+    }
+
+    // ── KONUŞMA TESTİ ──
+    if (sid === 'sSpeech') {
+      if (['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+      const correctBtn = document.getElementById('spCorrectBtn');
+      const wrongBtn = document.getElementById('spWrongBtn');
+      if (correctBtn && !correctBtn.disabled) {
+        switch(e.code) {
+          case 'Enter':
+            e.preventDefault();
+            markSpeech(true);
+            break;
+          case 'Space':
+            e.preventDefault();
+            markSpeech(false);
+            break;
+        }
+      }
+    }
+  });
+
+  // Space basılı tutunca ses çal, bırakınca durdur
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      const screen = document.querySelector('.screen.active');
+      if (screen && screen.id === 'sAudiometry') {
+        if (STATE.playing) stopTone();
+      }
+    }
+  });
+}
+
+// Frekans sıralamasında ileri/geri git
+function navigateFreq(dir) {
+  const idx = FREQS.indexOf(STATE.currentFreq);
+  const newIdx = Math.max(0, Math.min(FREQS.length - 1, idx + dir));
+  if (newIdx !== idx) selectFreq(FREQS[newIdx]);
+}
 
 function loadTTSVoice() {
   const saved = localStorage.getItem('gtts_api_key');
@@ -1352,7 +1447,15 @@ function setSpeechEar(ear) {
     btn.style.borderColor = e===ear?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--border)';
     btn.style.color = e===ear?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--gray-mid)';
     btn.style.background = e===ear?(e==='right'?'#fff5f5':'#e8f4fd'):'#fff';
+    btn.style.fontWeight = e===ear?'800':'700';
   });
+  // Aktif kulak badge
+  const badge = document.getElementById('spActiveEarBadge');
+  if(badge){
+    badge.style.display='block';
+    badge.style.background = ear==='right'?'var(--right-color)':'var(--left-color)';
+    badge.textContent = (ear==='right'?'👂 SAĞ KULAK TEST EDİLİYOR':'👂 SOL KULAK TEST EDİLİYOR');
+  }
   // PTA hesapla → SRT önerisi = PTA + 20 dB
   const ptaFreqs=[500,1000,2000,4000];
   const vals=ptaFreqs.map(f=>STATE.thresholds[ear][f]).filter(v=>v!==null);
@@ -1374,20 +1477,9 @@ function setSpeechEar(ear) {
 function setSrtLevel(db){
   srtDb = db;
   document.getElementById('srtDbDisplay').textContent = srtDb;
-  // Seçili butonu vurgula
-  [65,75,85,95,105].forEach(v=>{
-    const btn = document.getElementById('srtBtn'+v);
-    if(!btn) return;
-    if(v===db){
-      btn.style.background = 'var(--gray)';
-      btn.style.color = '#fff';
-      btn.style.borderColor = 'var(--gray)';
-    } else {
-      btn.style.background = '#fff';
-      btn.style.color = 'var(--gray)';
-      btn.style.borderColor = 'var(--border)';
-    }
-  });
+  // Dropdown'ı sync et
+  const sel = document.getElementById('srtLevelSelect');
+  if(sel) sel.value = db;
 }
 
 function stepSrtDb(v){
@@ -1453,6 +1545,11 @@ function startWordTest(){
   buildScoreDots();
   document.getElementById('spStartBtn').disabled=true;
   document.getElementById('spStartBtn').style.opacity='.4';
+  // Prev/restart aktifleştir
+  const prevBtn=document.getElementById('spPrevBtn');
+  const restartBtn=document.getElementById('spRestartBtn');
+  if(prevBtn){prevBtn.disabled=false;prevBtn.style.opacity='1';}
+  if(restartBtn){restartBtn.disabled=false;restartBtn.style.opacity='1';}
   showSpeechWord();
 }
 
@@ -1522,6 +1619,31 @@ function markSpeech(correct){
   setTimeout(showSpeechWord,500);
 }
 
+// Önceki kelimeye dön
+function goPrevWord(){
+  if(STATE.speech.wordIdx <= 0) return;
+  // Son sonucu geri al
+  STATE.speech.results.pop();
+  STATE.speech.wordIdx--;
+  // Dot'u sıfırla
+  const dot = document.getElementById('spDot_'+STATE.speech.wordIdx);
+  if(dot){
+    dot.style.background='#e8e8f0';
+    dot.style.color='#aaa';
+    dot.textContent=(STATE.speech.wordIdx+1);
+  }
+  showSpeechWord();
+}
+
+// Başa dön
+function restartWordTest(){
+  if(!confirm('Kelime testini baştan başlatmak istiyor musunuz?')) return;
+  STATE.speech.wordIdx=0;
+  STATE.speech.results=[];
+  buildScoreDots();
+  showSpeechWord();
+}
+
 function finishSpeechEar(){
   const ear=STATE.speech.ear;
   const correct=STATE.speech.results.filter(Boolean).length;
@@ -1535,6 +1657,9 @@ function finishSpeechEar(){
   document.getElementById('spStartBtn').disabled=false;
   document.getElementById('spStartBtn').style.opacity='1';
   showToast(`${ear==='right'?'Sağ':'Sol'} kulak: %${pct} doğru`,'success');
+  // Tamamlanan kulak badge'ini göster
+  const doneBadge=document.getElementById('spEar'+(ear==='right'?'Right':'Left')+'Done');
+  if(doneBadge) doneBadge.style.display='inline';
 
   // Diğer kulağa geçiş uyarısı
   const otherEar = ear==='right'?'left':'right';
