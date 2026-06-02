@@ -518,18 +518,47 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 
     <!-- SRT bölümü -->
     <div style="background:var(--gray-light);border-radius:14px;padding:20px;margin-bottom:18px">
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:12px">SRT Tespiti</div>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font-family:'DM Serif Display',serif;font-size:42px;color:var(--gray)" id="srtDbDisplay">50</div>
-        <div style="color:var(--gray-mid);font-size:14px">dB</div>
-        <div style="display:flex;gap:8px">
-          <button onclick="stepSrtDb(-5)" class="db-btn" style="width:44px;height:44px">−5</button>
-          <button onclick="stepSrtDb(+5)" class="db-btn" style="width:44px;height:44px">+5</button>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:12px">SRT Tespiti — Konuşma Testi</div>
+
+      <!-- dB seviye butonları -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="srtLevelBtns">
+        <button onclick="setSrtLevel(65)" id="srtBtn65"
+          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
+          65 dB
+        </button>
+        <button onclick="setSrtLevel(75)" id="srtBtn75"
+          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
+          75 dB
+        </button>
+        <button onclick="setSrtLevel(85)" id="srtBtn85"
+          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
+          85 dB
+        </button>
+        <button onclick="setSrtLevel(95)" id="srtBtn95"
+          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
+          95 dB
+        </button>
+        <button onclick="setSrtLevel(105)" id="srtBtn105"
+          style="padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">
+          105 dB
+        </button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="font-family:'DM Serif Display',serif;font-size:38px;color:var(--gray)" id="srtDbDisplay">65</div>
+        <div style="color:var(--gray-mid);font-size:13px">dB HL</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="stepSrtDb(-5)" class="db-btn" style="width:40px;height:40px;font-size:16px">−5</button>
+          <button onclick="stepSrtDb(-1)" class="db-btn" style="width:40px;height:40px;font-size:14px">−1</button>
+          <button onclick="stepSrtDb(+1)" class="db-btn" style="width:40px;height:40px;font-size:14px">+1</button>
+          <button onclick="stepSrtDb(+5)" class="db-btn" style="width:40px;height:40px;font-size:16px">+5</button>
         </div>
-        <button onclick="playSrtTone()" class="btn btn-sm" style="background:var(--gray);color:#fff">▶ Ton</button>
+        <button onclick="playSrtSpeech()" class="btn btn-sm" style="background:var(--gray);color:#fff">
+          🗣️ "Beni duyuyor musunuz?"
+        </button>
         <button onclick="saveSrt()" class="btn btn-sm" style="background:var(--success);color:#fff">✓ SRT Kaydet</button>
       </div>
-      <div style="font-size:12px;color:var(--gray-mid);margin-top:8px">Hastanın %50 duyduğu şiddeti belirleyip kaydedin</div>
+      <div style="font-size:12px;color:var(--gray-mid)">Hastanın %50 yanıt verdiği seviyeyi belirleyip kaydedin</div>
       <div id="srtSaved" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--success)"></div>
     </div>
 
@@ -678,9 +707,9 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 // TÜRKÇE ODYOLOJİK KELİME LİSTELERİ (PB - Phonetically Balanced)
 // ════════════════════════════════════════════════════════════
 const WORD_LISTS = {
-  A:['at','ev','iş','ok','baş','çay','dal','el','fal','göz',
-     'han','ip','kaz','mor','nar','ot','pul','rol','sap','taç',
-     'us','var','yol','zor','gün'],
+  A:['at','ev','iş','baş','çay','dal','el','fal','göz',
+     'han','kaz','mor','nar','ot','pul','rol','sap','taç',
+     'us','var','yol','zor','gün','dağ','kır'],
   B:['ad','bel','cep','diz','ek','fen','hak','kar','mal','nur',
      'orak','sal','top','vadi','yaz','akar','bilek','çivi','duman','ekin',
      'fırtına','gece','hayal','ince','jeton']
@@ -689,8 +718,8 @@ const WORD_LISTS = {
 // ════════════════════════════════════════════════════════════
 // FREKANSLAR
 // ════════════════════════════════════════════════════════════
-const FREQS = [1000,2000,4000,8000,500,250];
-const FREQ_LABELS = ['1k','2k','4k','8k','500','250'];
+const FREQS = [1000,2000,4000,6000,8000,500,250];
+const FREQ_LABELS = ['1k','2k','4k','6k','8k','500','250'];
 
 // ════════════════════════════════════════════════════════════
 // WEB AUDIO — AKG N60 kalibrasyonlu gainler
@@ -1314,7 +1343,7 @@ function renderAudiogram() {
 // ════════════════════════════════════════════════════════════
 // KONUŞMA TESTİ
 // ════════════════════════════════════════════════════════════
-let srtDb = 50;
+let srtDb = 65;
 
 function setSpeechEar(ear) {
   STATE.speech.ear = ear;
@@ -1342,9 +1371,42 @@ function setSpeechEar(ear) {
   }
 }
 
+function setSrtLevel(db){
+  srtDb = db;
+  document.getElementById('srtDbDisplay').textContent = srtDb;
+  // Seçili butonu vurgula
+  [65,75,85,95,105].forEach(v=>{
+    const btn = document.getElementById('srtBtn'+v);
+    if(!btn) return;
+    if(v===db){
+      btn.style.background = 'var(--gray)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--gray)';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = 'var(--gray)';
+      btn.style.borderColor = 'var(--border)';
+    }
+  });
+}
+
 function stepSrtDb(v){
   srtDb=Math.max(0,Math.min(120,srtDb+v));
   document.getElementById('srtDbDisplay').textContent=srtDb;
+  // Buton vurgusunu temizle
+  [65,75,85,95,105].forEach(db=>{
+    const btn=document.getElementById('srtBtn'+db);
+    if(btn){btn.style.background='#fff';btn.style.color='var(--gray)';btn.style.borderColor='var(--border)';}
+  });
+}
+
+async function playSrtSpeech(){
+  // "Beni duyuyor musunuz?" cümlesini seçili dB seviyesinde çal
+  const oldDb = STATE.speech.speechDb;
+  STATE.speech.speechDb = srtDb;
+  await googleSpeak('Beni duyuyor musunuz?', ()=>{
+    STATE.speech.speechDb = oldDb;
+  });
 }
 
 function stepSpeechDb(v){
