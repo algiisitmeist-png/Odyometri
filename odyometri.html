@@ -26,12 +26,21 @@
   --shadow-lg: 0 8px 40px rgba(26,26,46,.14);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakarta Sans',sans-serif;color:var(--gray)}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakarta Sans',sans-serif;color:var(--gray)}
 
 /* ═══════════════════════════════════════
-   LAYOUT — iPad optimized
+   LAYOUT — ThinkPad T14 optimized
+   1920x1080 veya 1366x768 landscape
 ═══════════════════════════════════════ */
-.app{display:flex;flex-direction:column;height:100vh;background:#f0f0f6}
+.app{
+  display:flex;
+  flex-direction:column;
+  position:fixed;
+  inset:0;
+  background:#f0f0f6;
+  overflow:hidden;
+}
 
 /* TOP BAR */
 .topbar{
@@ -48,16 +57,16 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 .topbar-actions{display:flex;gap:8px}
 
 /* SCREENS */
-.screen{display:none;flex:1;overflow:hidden}
-.screen.active{display:flex;flex-direction:column}
+.screen{display:none;flex:1;overflow:hidden;min-height:0}
+.screen.active{display:flex;flex-direction:column;flex:1;min-height:0}
 
 /* ═══════════════════════════════════════
    SCREEN 1 — HASTA KAYDI
 ═══════════════════════════════════════ */
-#sPatient{align-items:center;justify-content:center;background:var(--gray)}
+#sPatient{align-items:center;justify-content:center;background:var(--gray);overflow-y:auto;padding:20px}
 .patient-card{
-  background:#fff;border-radius:20px;
-  padding:40px 48px;width:100%;max-width:520px;
+  background:#fff;border-radius:16px;
+  padding:32px 40px;width:100%;max-width:560px;
   box-shadow:var(--shadow-lg);
 }
 .patient-card h2{font-family:'DM Serif Display',serif;font-size:28px;color:var(--gray);margin-bottom:6px}
@@ -88,15 +97,17 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 /* ═══════════════════════════════════════
    SCREEN 2 — SAF SES ODYOMETRİSİ
 ═══════════════════════════════════════ */
-#sAudiometry{flex-direction:row}
+#sAudiometry{flex-direction:row;overflow:hidden;min-height:0}
 
 /* Sol panel — kontroller */
 .ctrl-panel{
-  width:290px;flex-shrink:0;background:#fff;
+  width:280px;flex-shrink:0;background:#fff;
   border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow-y:auto;
+  display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  height:100%;
 }
-.ctrl-section{padding:16px 18px;border-bottom:1px solid var(--border)}
+.ctrl-section{padding:12px 16px;border-bottom:1px solid var(--border)}
 .ctrl-section h3{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:12px}
 
 /* Kulak seçici */
@@ -140,8 +151,8 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 
 /* dB kontrol */
 .db-display{
-  text-align:center;padding:16px;background:var(--gray-light);
-  border-radius:12px;margin-bottom:12px;
+  text-align:center;padding:10px 16px;background:var(--gray-light);
+  border-radius:10px;margin-bottom:10px;
 }
 .db-num{font-family:'DM Serif Display',serif;font-size:52px;color:var(--gray);line-height:1}
 .db-unit{font-size:14px;color:var(--gray-mid);margin-top:2px}
@@ -157,7 +168,7 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 .db-slider{width:100%;margin-top:12px;accent-color:var(--gray)}
 
 /* Ses kontrol */
-.play-section{padding:18px}
+.play-section{padding:12px 16px}
 .play-big{
   width:100%;padding:20px;border-radius:14px;border:none;
   background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;
@@ -188,10 +199,11 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 .mask-noise-btn.on{background:var(--warning);color:#fff}
 
 /* ── sağ panel — odyogram ── */
-.chart-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f8f8fb}
+.chart-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f8f8fb;min-width:0}
 .chart-header{
-  padding:12px 20px;background:#fff;border-bottom:1px solid var(--border);
+  padding:10px 16px;background:#fff;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  flex-wrap:wrap;gap:8px;
 }
 .chart-header h2{font-size:15px;font-weight:700;color:var(--gray)}
 .pta-display{display:flex;gap:16px}
@@ -201,10 +213,10 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
 .pta-val.right{color:var(--right-color)}
 .pta-val.left{color:var(--left-color)}
 
-.chart-wrap{flex:1;padding:16px;overflow:hidden}
+.chart-wrap{flex:1;padding:12px 16px;overflow:hidden;min-height:0;display:flex;align-items:stretch}
 
 /* SVG odyogram */
-.audiogram-svg{width:100%;height:100%;display:block}
+.audiogram-svg{width:100%;height:100%;display:block;max-height:calc(100vh - 160px)}
 
 /* Sonuç paneli alt */
 .result-bar{
@@ -219,19 +231,21 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
    SCREEN 3 — KONUŞMA TESTİ (basit)
 ═══════════════════════════════════════ */
 #sSpeech{
-  flex-direction:column;align-items:center;justify-content:center;
-  padding:32px;background:var(--gray);
+  flex-direction:column;align-items:center;
+  padding:16px 24px;background:var(--gray);
+  overflow-y:auto;
 }
 .speech-card{
-  background:#fff;border-radius:20px;padding:36px 44px;
-  width:100%;max-width:640px;box-shadow:var(--shadow-lg);
+  background:#fff;border-radius:16px;padding:24px 32px;
+  width:100%;max-width:760px;box-shadow:var(--shadow-lg);
+  margin:auto;
 }
 
 /* ═══════════════════════════════════════
    SCREEN 4 — SONUÇ
 ═══════════════════════════════════════ */
-#sResult{flex-direction:column;align-items:center;overflow-y:auto;padding:32px;background:var(--gray)}
-.result-card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:720px;box-shadow:var(--shadow-lg)}
+#sResult{flex-direction:column;align-items:center;overflow-y:auto;padding:16px 24px;background:var(--gray)}
+.result-card{background:#fff;border-radius:16px;padding:28px 32px;width:100%;max-width:860px;box-shadow:var(--shadow-lg);margin:auto}
 
 /* ═══════════════════════════════════════
    TOAST
@@ -265,21 +279,16 @@ html,body{height:100%;overflow:hidden;background:#1a1a2e;font-family:'Plus Jakar
   .screen{display:flex!important}
 }
 
-/* iPad 7 — 1024x768 landscape */
-@media(max-width:1024px){
-  .ctrl-panel{width:268px}
+/* ThinkPad T14 — 1920x1080 veya 1366x768 */
+@media(max-width:1400px){
+  .ctrl-panel{width:260px}
   .db-num{font-size:44px}
-  .patient-card{padding:32px 28px;max-width:480px}
-  .freq-btn{padding:10px 2px;font-size:11px}
-  .topbar-title{font-size:18px}
-  /* Bigger touch targets */
-  .db-btn{min-height:52px;font-size:18px}
-  .play-big{padding:20px;font-size:17px}
-  .save-btn{padding:16px;font-size:16px}
-  .ear-btn{padding:12px 6px;font-size:12px}
-  .hear-btn{padding:18px 10px}
-  /* Ensure buttons are tappable */
-  button{min-height:44px}
+}
+@media(max-width:1100px){
+  .ctrl-panel{width:240px}
+  .db-num{font-size:38px}
+  .play-big{padding:16px;font-size:14px}
+  .save-btn{padding:14px;font-size:13px}
 }
 
 </style>
