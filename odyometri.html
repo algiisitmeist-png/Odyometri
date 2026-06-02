@@ -621,18 +621,44 @@ const FREQS = [1000,2000,4000,8000,500,250];
 const FREQ_LABELS = ['1k','2k','4k','8k','500','250'];
 
 // ════════════════════════════════════════════════════════════
-// WEB AUDIO — ISO 226 kalibrasyonlu gainler
+// WEB AUDIO — AKG N60 kalibrasyonlu gainler
 // ════════════════════════════════════════════════════════════
-// RETSPL düzeltmesi: 0 dB HL karşılığı gereken ek SPL
-// Her frekans için: [250,500,1000,2000,4000,6000,8000]
-const RETSPL = {250:26.5, 500:11.5, 1000:7.5, 2000:3.5, 4000:5.5, 6000:2.0, 8000:9.0};
-// Temel gain: 40 dB HL @ 1kHz
-const BASE_GAIN_40dB_1kHz = 0.003;
+// Kalibrasyon: AKG N60 kablolu mod
+// Hassasiyet: 123 dB SPL/V @ 1kHz, 32 Ohm
+// ISO 389-8 RETSPL + AKG N60 frekans yanıtı düzeltmesi
+// iPad %100 ses seviyesi referans
+//
+// Temel gainler (1kHz referans, AKG N60 için -16 dB hassasiyet düzeltmeli):
+const BASE_GAINS_1K = {
+  80: 0.003170,
+  65: 0.000602,
+  50: 0.000108,
+  35: 0.000019,
+  20: 0.000003
+};
+
+// ISO 389-8 RETSPL + AKG N60 frekans yanıtı düzeltme çarpanları
+// [250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 6kHz, 8kHz]
+const FREQ_MULTS = {
+  250:  7.079,
+  500:  1.496,
+  1000: 1.000,
+  2000: 0.668,
+  4000: 0.891,
+  6000: 0.473,
+  8000: 0.944
+};
 
 function getGain(freqHz, dbHL) {
-  const retsplCorr = Math.pow(10, ((RETSPL[freqHz]||7.5) - RETSPL[1000]) / 20);
-  const dbCorr = Math.pow(10, (dbHL - 40) / 20);
-  return BASE_GAIN_40dB_1kHz * dbCorr * retsplCorr;
+  // En yakın kalibre edilmiş dB seviyesini bul
+  const dbSteps = [20, 35, 50, 65, 80];
+  const nearestDb = dbSteps.reduce((p, c) =>
+    Math.abs(c - dbHL) < Math.abs(p - dbHL) ? c : p
+  );
+  // Aradaki farkı lineer interpolasyonla hesapla
+  const baseGain = BASE_GAINS_1K[nearestDb] * Math.pow(10, (dbHL - nearestDb) / 20);
+  const freqMult = FREQ_MULTS[freqHz] || 1.0;
+  return baseGain * freqMult;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -867,15 +893,9 @@ function updateToneGain() {
 // ════════════════════════════════════════════════════════════
 function getACtx() {
   if (!STATE.actx) {
-    // iPad/Safari Bluetooth fix: AudioContext'i bir ses olayı tetiklendikten sonra oluştur
-    STATE.actx = new (window.AudioContext||window.webkitAudioContext)({
-      latencyHint: 'interactive',
-      sampleRate: 44100
-    });
+    STATE.actx = new (window.AudioContext||window.webkitAudioContext)();
   }
-  if (STATE.actx.state === 'suspended') {
-    STATE.actx.resume();
-  }
+  if (STATE.actx.state === 'suspended') STATE.actx.resume();
   return STATE.actx;
 }
 
@@ -905,15 +925,13 @@ async function warmUpBluetooth() {
   }
 }
 
-async function togglePlay() {
+function togglePlay() {
   if (STATE.playing) stopTone();
-  else await startTone();
+  else startTone();
 }
 
-async function startTone() {
+function startTone() {
   stopTone();
-  // iPad Bluetooth fix: önce ses route'unu ısıt
-  await warmUpBluetooth();
   const c = getACtx();
   STATE.toneOsc = c.createOscillator();
   STATE.toneGain = c.createGain();
