@@ -1137,12 +1137,16 @@ function setTestMode(mode) {
     saveBtn.textContent='✓ Kaydet (Eşik)';
     activeFreqSet='normal';
     rebuildFreqGrid();
+    const t=document.getElementById('chartTitle');
+    if(t) t.textContent='Saf Ses Testi';
   } else if(mode === 'ehf') {
     ehfBtn.style.background='#6a1b9a';ehfBtn.style.color='#fff';ehfBtn.style.borderColor='#6a1b9a';
     saveBtn.style.display='flex'; nrBtn.style.display='flex'; uclSaveBtn.style.display='none';
     saveBtn.textContent='✓ Kaydet (EHF)';
     activeFreqSet='ehf';
     rebuildFreqGrid();
+    const t=document.getElementById('chartTitle');
+    if(t) t.textContent='Yüksek Frekans Odyometrisi (EHF)';
   } else {
     uclBtn.style.background='var(--red)';uclBtn.style.color='#fff';uclBtn.style.borderColor='var(--red)';
     saveBtn.style.display='none'; nrBtn.style.display='none'; uclSaveBtn.style.display='flex';
