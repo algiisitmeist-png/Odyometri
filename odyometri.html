@@ -803,7 +803,6 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
         <div style="font-size:13px;color:var(--gray-mid)" id="resultDate"></div>
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="exportXML()" class="btn btn-sm" style="background:var(--blue);color:#fff">⬇ HIMSA XML</button>
         <button onclick="printReport()" class="btn btn-sm" style="background:var(--gray);color:#fff">🖨️ Yazdır</button>
       </div>
     </div>
@@ -819,51 +818,33 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       <h2 style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--gray);margin-bottom:6px">Manuel Kulaklık Kalibrasyonu</h2>
       <p style="font-size:13px;color:var(--gray-mid);margin-bottom:24px">Referans odyogram eşiklerinizi girin. Kulaklığı takıp her frekans için sesi duyduğunuz eşiği ölçün. Sistem farkı hesaplayarak gain değerlerini otomatik ayarlar.</p>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
-
-        <!-- SOL: Referans değerler -->
-        <div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:12px;border-left:3px solid var(--success);padding-left:8px">
-            Referans Eşikleriniz (Gerçek işitme)
-          </div>
-          <div style="font-size:12px;color:var(--gray-mid);margin-bottom:10px">Kalibrasyon sertifikalı cihazda ölçülen kendi eşikleriniz:</div>
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <tr style="background:var(--gray-light)">
-              <th style="padding:6px 8px;text-align:left;font-weight:700">Frekans</th>
-              <th style="padding:6px 8px;text-align:center;font-weight:700">Sağ (dB HL)</th>
-              <th style="padding:6px 8px;text-align:center;font-weight:700">Sol (dB HL)</th>
-            </tr>
-            ${[250,500,1000,2000,4000,8000].map(f=>`
-            <tr>
-              <td style="padding:6px 8px;font-weight:600">${f>=1000?f/1000+'k':f} Hz</td>
-              <td style="padding:4px 6px;text-align:center"><input type="number" id="calRef_R_${f}" min="-10" max="80" step="5" placeholder="—" style="width:60px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif"></td>
-              <td style="padding:4px 6px;text-align:center"><input type="number" id="calRef_L_${f}" min="-10" max="80" step="5" placeholder="—" style="width:60px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif"></td>
-            </tr>`).join('')}
-          </table>
+      <!-- Basit giriş: frekans bazlı referans ve ölçüm -->
+      <div style="margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;gap:0;background:var(--gray);border-radius:8px 8px 0 0;overflow:hidden">
+          <div style="padding:8px;font-size:10px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase">Frekans</div>
+          <div style="padding:8px;font-size:10px;font-weight:700;color:#ff6b6b;text-align:center">Ref. Sağ</div>
+          <div style="padding:8px;font-size:10px;font-weight:700;color:#64b5f6;text-align:center">Ref. Sol</div>
+          <div style="padding:8px;font-size:10px;font-weight:700;color:#ffb74d;text-align:center">Ölçüm Sağ</div>
+          <div style="padding:8px;font-size:10px;font-weight:700;color:#81c784;text-align:center">Ölçüm Sol</div>
         </div>
-
-        <!-- SAĞ: Ölçüm değerleri -->
-        <div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:12px;border-left:3px solid var(--red);padding-left:8px">
-            Bu Kulaklıkta Duyulan Eşik
-          </div>
-          <div style="font-size:12px;color:var(--gray-mid);margin-bottom:10px">Kulaklığı takıp bu sistemde ölçtüğünüz eşikler:</div>
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <tr style="background:var(--gray-light)">
-              <th style="padding:6px 8px;text-align:left;font-weight:700">Frekans</th>
-              <th style="padding:6px 8px;text-align:center;font-weight:700">Sağ (dB HL)</th>
-              <th style="padding:6px 8px;text-align:center;font-weight:700">Sol (dB HL)</th>
-            </tr>
-            ${[250,500,1000,2000,4000,8000].map(f=>`
-            <tr>
-              <td style="padding:6px 8px;font-weight:600">${f>=1000?f/1000+'k':f} Hz</td>
-              <td style="padding:4px 6px;text-align:center"><input type="number" id="calMeas_R_${f}" min="-10" max="120" step="5" placeholder="—" style="width:60px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif"></td>
-              <td style="padding:4px 6px;text-align:center"><input type="number" id="calMeas_L_${f}" min="-10" max="120" step="5" placeholder="—" style="width:60px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif"></td>
-            </tr>`).join('')}
-          </table>
-        </div>
+        ${[250,500,1000,2000,4000,8000].map((f,i)=>`
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;gap:0;background:${i%2?'var(--gray-light)':'#fff'};border:1px solid var(--border);border-top:none">
+          <div style="padding:8px 10px;font-weight:700;font-size:13px;display:flex;align-items:center">${f>=1000?f/1000+'k':f} Hz</div>
+          <div style="padding:6px"><input type="number" id="calRef_R_${f}" min="-10" max="80" step="5" value="" placeholder="dB"
+            style="width:100%;padding:6px;border:1.5px solid #ffcdd2;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--right-color);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
+          <div style="padding:6px"><input type="number" id="calRef_L_${f}" min="-10" max="80" step="5" value="" placeholder="dB"
+            style="width:100%;padding:6px;border:1.5px solid #bbdefb;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--left-color);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
+          <div style="padding:6px"><input type="number" id="calMeas_R_${f}" min="-10" max="120" step="5" value="" placeholder="dB"
+            style="width:100%;padding:6px;border:1.5px solid #ffe0b2;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--warning);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
+          <div style="padding:6px"><input type="number" id="calMeas_L_${f}" min="-10" max="120" step="5" value="" placeholder="dB"
+            style="width:100%;padding:6px;border:1.5px solid #c8e6c9;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
+        </div>`).join('')}
       </div>
 
+      <div style="background:var(--blue-light);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--blue)">
+        💡 <b>Ref. Sağ/Sol:</b> Kalibrasyon cihazında ölçülen gerçek eşikleriniz &nbsp;|&nbsp;
+        <b>Ölçüm Sağ/Sol:</b> Bu kulaklıkla bu sistemde duyduğunuz eşikler
+      </div>
       <!-- Fark analizi -->
       <div id="calDiffSection" style="background:var(--gray-light);border-radius:10px;padding:14px;margin-bottom:16px;display:none">
         <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Hesaplanan Düzeltme</div>
@@ -1863,6 +1844,35 @@ function calcPTA() {
       document.getElementById(elId).textContent = '—';
     }
   });
+  checkMaskingNeeded();
+}
+
+function checkMaskingNeeded() {
+  const DISP = [125,250,500,1000,2000,3000,4000,6000,8000];
+  const warnings = [];
+  DISP.forEach(f => {
+    const rTh = STATE.thresholds.right[f];
+    const lTh = STATE.thresholds.left[f];
+    if(rTh !== null && lTh !== null && Math.abs(rTh - lTh) > 40) {
+      const testEar = rTh > lTh ? 'Sağ' : 'Sol';
+      warnings.push(`${f>=1000?f/1000+'k':f} Hz — ${testEar} kulak (fark: ${Math.abs(rTh-lTh)} dB)`);
+    }
+  });
+  // Uyarı kutusunu göster/gizle
+  let warnEl = document.getElementById('maskingWarningBox');
+  if(!warnEl) {
+    warnEl = document.createElement('div');
+    warnEl.id = 'maskingWarningBox';
+    warnEl.style.cssText = 'display:none;background:var(--warning-light);border:1.5px solid var(--warning);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:11px;color:var(--warning);line-height:1.6';
+    const chartHeader = document.querySelector('.chart-header');
+    if(chartHeader) chartHeader.after(warnEl);
+  }
+  if(warnings.length > 0) {
+    warnEl.style.display = 'block';
+    warnEl.innerHTML = '<strong>⚠ Maskeleme Gerekli:</strong> ' + warnings.join(' | ');
+  } else {
+    warnEl.style.display = 'none';
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2515,49 +2525,7 @@ function buildResult(){
     </div>`;
   }
 
-  // Günlük yaşam sesleri banana chart
-  html+=`<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:10px;border-left:3px solid var(--red);padding-left:8px">Günlük Yaşam Sesleri Referansı</div>
-    <div style="overflow-x:auto">
-      <svg viewBox="0 0 660 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-        <!-- Arka plan bantları -->
-        <rect x="0" y="0" width="660" height="30" fill="#ecfaf4" opacity=".6"/>
-        <rect x="0" y="30" width="660" height="30" fill="#f5faf0" opacity=".6"/>
-        <rect x="0" y="60" width="660" height="30" fill="#fffde7" opacity=".6"/>
-        <rect x="0" y="90" width="660" height="30" fill="#fff8e1" opacity=".6"/>
-        <rect x="0" y="120" width="660" height="30" fill="#fce4ec" opacity=".6"/>
-        <rect x="0" y="150" width="660" height="30" fill="#f3e5f5" opacity=".6"/>
-        <!-- dB etiketleri -->
-        <text x="2" y="18" font-size="8" fill="#2e7d32" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">Normal (0-25)</text>
-        <text x="2" y="48" font-size="8" fill="#558b2f" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">Çok Hafif (26-40)</text>
-        <text x="2" y="78" font-size="8" fill="#f57f17" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">Hafif (41-55)</text>
-        <text x="2" y="108" font-size="8" fill="#e65100" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">Orta (56-70)</text>
-        <text x="2" y="138" font-size="8" fill="#c62828" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">İleri (71-90)</text>
-        <text x="2" y="168" font-size="8" fill="#6a1b9a" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">Çok İleri (&gt;90)</text>
 
-        <!-- Konuşma muz (speech banana) bölgesi -->
-        <ellipse cx="400" cy="52" rx="180" ry="28" fill="#FFA726" opacity=".25"/>
-        <text x="400" y="56" text-anchor="middle" font-size="9" fill="#e65100" font-weight="700" font-family="Plus Jakarta Sans,sans-serif">🗣 Konuşma Bölgesi (500-4000 Hz, 40-60 dB)</text>
-
-        <!-- Sesler -->
-        ${[
-          {x:120,y:8,t:'Yaprak Hışırtısı',s:'10 dB'},
-          {x:220,y:14,t:'Fısıltı',s:'20-30 dB'},
-          {x:310,y:24,t:'Normal Konuşma',s:'40-60 dB'},
-          {x:440,y:44,t:'Telefon Zili',s:'60-80 dB'},
-          {x:540,y:58,t:'TV',s:'60-70 dB'},
-          {x:160,y:18,t:'Rüzgar',s:'15-25 dB'},
-          {x:380,y:74,t:'Trafik',s:'70-90 dB'},
-          {x:480,y:92,t:'Müzik',s:'70-100 dB'},
-          {x:600,y:118,t:'Konser',s:'110 dB'},
-        ].map(s=>`
-          <circle cx="${s.x}" cy="${s.y+5}" r="3" fill="#666" opacity=".6"/>
-          <text x="${s.x}" y="${s.y}" text-anchor="middle" font-size="7.5" fill="#444" font-family="Plus Jakarta Sans,sans-serif">${s.t}</text>
-          <text x="${s.x}" y="${s.y+12}" text-anchor="middle" font-size="7" fill="#888" font-family="Plus Jakarta Sans,sans-serif">${s.s}</text>
-        `).join('')}
-      </svg>
-    </div>
-  </div>`;
 
   // Eşik tablosu
   html+=`<div style="overflow-x:auto;margin-bottom:16px">
@@ -2699,6 +2667,7 @@ function toggleApiKeyVisibility() {
 let ttsTestEar = 'right';
 function setTtsTestEar(ear) {
   ttsTestEar = ear;
+  localStorage.setItem('tts_test_ear', ear);
   ['right','left'].forEach(e => {
     const btn = document.getElementById('ttsEar'+e.charAt(0).toUpperCase()+e.slice(1));
     if(!btn) return;
@@ -2706,6 +2675,8 @@ function setTtsTestEar(ear) {
     btn.style.borderColor = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--border)';
     btn.style.background = active?(e==='right'?'#fff5f5':'#e8f4fd'):'#fff';
     btn.style.color = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--gray-mid)';
+    // Tik işareti
+    btn.textContent = active ? `✓ 👂 ${e==='right'?'Sağ':'Sol'}` : `👂 ${e==='right'?'Sağ':'Sol'}`;
   });
 }
 
@@ -2737,13 +2708,16 @@ function openSettings() {
   document.getElementById('settingsApiKey').value = key;
   document.getElementById('settingsTtsSpeed').value = speed;
   document.getElementById('ttsSpeedVal').textContent = speed;
-  // Kayıtlı key varsa tik göster
   if(key) {
     const keyInput = document.getElementById('settingsApiKey');
     if(keyInput) keyInput.style.borderColor = 'var(--success)';
     const keyStatus = document.getElementById('settingsKeyStatus');
     if(keyStatus) keyStatus.innerHTML = '✓';
   }
+  // Kayıtlı TTS kulak yönünü yükle ve tik göster
+  const savedEar = localStorage.getItem('tts_test_ear') || 'right';
+  ttsTestEar = savedEar;
+  setTtsTestEar(savedEar);
 }
 
 // ════════════════════════════════════════════════════════════
