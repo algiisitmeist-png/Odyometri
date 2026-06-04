@@ -313,6 +313,13 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   <div class="topbar-patient" id="topPatient">
     <span>Hasta seçilmedi</span>
   </div>
+  <div style="display:flex;align-items:center;gap:6px;margin-left:12px" id="noiseMeter">
+    <span style="font-size:10px;color:rgba(255,255,255,.4)">🎤</span>
+    <div style="width:80px;height:10px;background:rgba(255,255,255,.12);border-radius:5px;overflow:hidden;position:relative">
+      <div id="noiseBar" style="height:100%;width:0%;border-radius:5px;transition:width .15s;background:var(--success)"></div>
+    </div>
+    <span id="noiseDbVal" style="font-size:11px;color:rgba(255,255,255,.5);min-width:40px;font-weight:600">— dB</span>
+  </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showScreen('sPatient')">👤 Hasta</button>
@@ -409,9 +416,12 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
     <!-- Test Modu -->
     <div class="ctrl-section">
       <h3>Test Modu</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
         <button id="modeThreshold" onclick="setTestMode('threshold')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--gray);background:var(--gray);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:#fff">
           Eşik (AC)
+        </button>
+        <button id="modeEHF" onclick="setTestMode('ehf')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">
+          Yüksek Frek.
         </button>
         <button id="modeUCL" onclick="setTestMode('ucl')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">
           UCL
@@ -520,7 +530,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   <!-- SAĞ PANEL — ODYOGRAFİ -->
   <div class="chart-panel">
     <div class="chart-header">
-      <h2>Saf Ses Testi</h2>
+      <h2 id="chartTitle">Saf Ses Testi</h2>
       <div class="pta-display">
         <div class="pta-item">
           <div class="pta-label">PTA Sağ</div>
@@ -817,8 +827,17 @@ const WORD_LISTS = {
 // ════════════════════════════════════════════════════════════
 // FREKANSLAR
 // ════════════════════════════════════════════════════════════
-const FREQS = [1000,2000,4000,6000,8000,500,250];
-const FREQ_LABELS = ['1k','2k','4k','6k','8k','500','250'];
+const FREQS = [1000,2000,3000,4000,6000,8000,500,250,125];
+const FREQ_LABELS = ['1k','2k','3k','4k','6k','8k','500','250','125'];
+
+// Yüksek Frekans Odyometrisi (EHF) — 8kHz–20kHz
+const EHF_FREQS = [8000,9000,10000,11200,12500,14000,16000,18000,20000];
+const EHF_LABELS = ['8k','9k','10k','11.2k','12.5k','14k','16k','18k','20k'];
+
+// Aktif frekans seti
+let activeFreqSet = 'normal'; // 'normal' | 'ehf'
+function getActiveFreqs() { return activeFreqSet==='ehf' ? EHF_FREQS : FREQS; }
+function getActiveLabels() { return activeFreqSet==='ehf' ? EHF_LABELS : FREQ_LABELS; }
 
 // ════════════════════════════════════════════════════════════
 // WEB AUDIO — AKG N60 kalibrasyonlu gainler
@@ -841,13 +860,23 @@ const BASE_GAINS_1K = {
 // ISO 389-8 RETSPL + AKG N60 frekans yanıtı düzeltme çarpanları
 // [250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 6kHz, 8kHz]
 const FREQ_MULTS = {
+  125:  15.85,  // çok düşük frekans — yüksek RETSPL düzeltme
   250:  7.079,
   500:  1.496,
   1000: 1.000,
   2000: 0.668,
+  3000: 0.750,
   4000: 0.891,
   6000: 0.473,
-  8000: 0.944
+  8000: 0.944,
+  9000: 1.100,
+  10000: 1.300,
+  11200: 1.500,
+  12500: 1.800,
+  14000: 2.200,
+  16000: 3.000,
+  18000: 4.500,
+  20000: 7.000
 };
 
 function getGain(freqHz, dbHL) {
@@ -879,22 +908,22 @@ let STATE = {
   pulseInterval: null,
   // Kaydedilen eşikler
   thresholds: {
-    right: {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null},
-    left:  {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null}
+    right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
+    left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
   },
   maskedThresholds: {
-    right: {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null},
-    left:  {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null}
+    right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
+    left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
   },
   // NR (Cevap Alınamadı) — frekans bazında true/false
   noResponse: {
-    right: {250:false,500:false,1000:false,2000:false,4000:false,6000:false,8000:false},
-    left:  {250:false,500:false,1000:false,2000:false,4000:false,6000:false,8000:false}
+    right: {125:false,250:false,500:false,1000:false,2000:false,3000:false,4000:false,6000:false,8000:false,9000:false,10000:false,11200:false,12500:false,14000:false,16000:false,18000:false,20000:false},
+    left:  {125:false,250:false,500:false,1000:false,2000:false,3000:false,4000:false,6000:false,8000:false,9000:false,10000:false,11200:false,12500:false,14000:false,16000:false,18000:false,20000:false}
   },
   // UCL (Uncomfortable Loudness Level)
   ucl: {
-    right: {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null},
-    left:  {250:null,500:null,1000:null,2000:null,4000:null,6000:null,8000:null}
+    right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
+    left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
   },
   // Konuşma testi — her kulak için ayrı durum
   speech: {
@@ -932,7 +961,67 @@ window.addEventListener('load', () => {
   renderAudiogram();
   loadTTSVoice();
   initKeyboard();
+  initNoiseMeter();
 });
+
+// ════════════════════════════════════════════════════════════
+// ORTAM GÜRÜLTÜSÜ ÖLÇER — Mikrofon
+// ════════════════════════════════════════════════════════════
+let noiseAnalyser = null;
+let noiseDataArray = null;
+let noiseAnimFrame = null;
+
+async function initNoiseMeter() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = ctx.createMediaStreamSource(stream);
+    noiseAnalyser = ctx.createAnalyser();
+    noiseAnalyser.fftSize = 2048;
+    noiseAnalyser.smoothingTimeConstant = 0.8;
+    src.connect(noiseAnalyser);
+    noiseDataArray = new Float32Array(noiseAnalyser.fftSize);
+    updateNoiseMeter();
+  } catch(e) {
+    console.log("Mikrofon erişimi yok:", e.message);
+    const val = document.getElementById("noiseDbVal");
+    if(val) val.textContent = "Kapalı";
+  }
+}
+
+function updateNoiseMeter() {
+  if (!noiseAnalyser) return;
+  noiseAnalyser.getFloatTimeDomainData(noiseDataArray);
+  let sum = 0;
+  for (let i = 0; i < noiseDataArray.length; i++) {
+    sum += noiseDataArray[i] * noiseDataArray[i];
+  }
+  const rms = Math.sqrt(sum / noiseDataArray.length);
+  // dB SPL tahmini (kalibrasyon yaklaşık — mikrofon hassasiyetine bağlı)
+  // Referans: 0 dBFS ≈ 94 dB SPL (tipik mikrofon)
+  const dbSPL = rms > 0 ? Math.round(20 * Math.log10(rms) + 94) : 0;
+  const clampedDb = Math.max(20, Math.min(100, dbSPL));
+
+  const bar = document.getElementById("noiseBar");
+  const val = document.getElementById("noiseDbVal");
+  if (bar && val) {
+    const pct = Math.max(0, Math.min(100, ((clampedDb - 20) / 60) * 100));
+    bar.style.width = pct + "%";
+    val.textContent = clampedDb + " dB";
+    // Renk: yeşil (<40), sarı (40-55), kırmızı (>55)
+    if (clampedDb < 40) {
+      bar.style.background = "var(--success)";
+      val.style.color = "rgba(255,255,255,.5)";
+    } else if (clampedDb < 55) {
+      bar.style.background = "var(--warning)";
+      val.style.color = "#f0a830";
+    } else {
+      bar.style.background = "var(--red)";
+      val.style.color = "#ff6b6b";
+    }
+  }
+  noiseAnimFrame = requestAnimationFrame(updateNoiseMeter);
+}
 
 // ════════════════════════════════════════════════════════════
 // KLAVYE KISAYOLLARI (ThinkPad T14)
@@ -1031,25 +1120,36 @@ function setStimulus(type) {
 function setTestMode(mode) {
   STATE.testMode = mode;
   const thBtn = document.getElementById('modeThreshold');
+  const ehfBtn = document.getElementById('modeEHF');
   const uclBtn = document.getElementById('modeUCL');
   const saveBtn = document.getElementById('saveBtn');
   const nrBtn = document.getElementById('nrBtn');
   const uclSaveBtn = document.getElementById('uclSaveBtn');
 
+  // Tüm butonları sıfırla
+  [thBtn, ehfBtn, uclBtn].forEach(b => {
+    if(b){b.style.background='#fff';b.style.color='var(--gray-mid)';b.style.borderColor='var(--border)';}
+  });
+
   if(mode === 'threshold') {
-    thBtn.style.background = 'var(--gray)'; thBtn.style.color = '#fff'; thBtn.style.borderColor = 'var(--gray)';
-    uclBtn.style.background = '#fff'; uclBtn.style.color = 'var(--gray-mid)'; uclBtn.style.borderColor = 'var(--border)';
-    saveBtn.style.display = 'flex';
-    nrBtn.style.display = 'flex';
-    uclSaveBtn.style.display = 'none';
-    saveBtn.textContent = '✓ Kaydet (Eşik)';
+    thBtn.style.background='var(--gray)';thBtn.style.color='#fff';thBtn.style.borderColor='var(--gray)';
+    saveBtn.style.display='flex'; nrBtn.style.display='flex'; uclSaveBtn.style.display='none';
+    saveBtn.textContent='✓ Kaydet (Eşik)';
+    activeFreqSet='normal';
+    rebuildFreqGrid();
+  } else if(mode === 'ehf') {
+    ehfBtn.style.background='#6a1b9a';ehfBtn.style.color='#fff';ehfBtn.style.borderColor='#6a1b9a';
+    saveBtn.style.display='flex'; nrBtn.style.display='flex'; uclSaveBtn.style.display='none';
+    saveBtn.textContent='✓ Kaydet (EHF)';
+    activeFreqSet='ehf';
+    rebuildFreqGrid();
   } else {
-    uclBtn.style.background = 'var(--red)'; uclBtn.style.color = '#fff'; uclBtn.style.borderColor = 'var(--red)';
-    thBtn.style.background = '#fff'; thBtn.style.color = 'var(--gray-mid)'; thBtn.style.borderColor = 'var(--border)';
-    saveBtn.style.display = 'none';
-    nrBtn.style.display = 'none';
-    uclSaveBtn.style.display = 'flex';
+    uclBtn.style.background='var(--red)';uclBtn.style.color='#fff';uclBtn.style.borderColor='var(--red)';
+    saveBtn.style.display='none'; nrBtn.style.display='none'; uclSaveBtn.style.display='flex';
+    activeFreqSet='normal';
+    rebuildFreqGrid();
   }
+  renderAudiogram();
 }
 
 function saveNR() {
@@ -1063,9 +1163,9 @@ function saveNR() {
   updateSavedPointsDisplay();
   calcPTA();
   renderAudiogram();
-  // Sonraki frekansa geç
-  const idx = FREQS.indexOf(f);
-  if(idx < FREQS.length - 1) setTimeout(() => selectFreq(FREQS[idx+1]), 300);
+  const freqs2 = getActiveFreqs();
+  const idx2 = freqs2.indexOf(f);
+  if(idx2 < freqs2.length - 1) setTimeout(() => selectFreq(freqs2[idx2+1]), 300);
 }
 
 function saveUCL() {
@@ -1076,15 +1176,17 @@ function saveUCL() {
   STATE.ucl[ear][f] = db;
   showToast(`${ear==='right'?'Sağ':'Sol'} ${f}Hz UCL: ${db} dB`, 'warn');
   renderAudiogram();
-  const idx = FREQS.indexOf(f);
-  if(idx < FREQS.length - 1) setTimeout(() => selectFreq(FREQS[idx+1]), 300);
+  const freqs3 = getActiveFreqs();
+  const idx3 = freqs3.indexOf(f);
+  if(idx3 < freqs3.length - 1) setTimeout(() => selectFreq(freqs3[idx3+1]), 300);
 }
 
 // Frekans sıralamasında ileri/geri git
 function navigateFreq(dir) {
-  const idx = FREQS.indexOf(STATE.currentFreq);
-  const newIdx = Math.max(0, Math.min(FREQS.length - 1, idx + dir));
-  if (newIdx !== idx) selectFreq(FREQS[newIdx]);
+  const freqs = getActiveFreqs();
+  const idx = freqs.indexOf(STATE.currentFreq);
+  const newIdx = Math.max(0, Math.min(freqs.length - 1, idx + dir));
+  if (newIdx !== idx) selectFreq(freqs[newIdx]);
 }
 
 function loadTTSVoice() {
@@ -1307,16 +1409,27 @@ function updateMaskGain() {
 // ════════════════════════════════════════════════════════════
 // FREKANS SEÇİMİ
 // ════════════════════════════════════════════════════════════
-function buildFreqGrid() {
+function buildFreqGrid() { rebuildFreqGrid(); }
+
+function rebuildFreqGrid() {
   const grid = document.getElementById('freqGrid');
-  FREQS.forEach((f, i) => {
+  grid.innerHTML = '';
+  const freqs = getActiveFreqs();
+  const labels = getActiveLabels();
+  // İlk frekansı seç (set değiştiğinde)
+  if(!freqs.includes(STATE.currentFreq)) {
+    STATE.currentFreq = freqs[0];
+  }
+  freqs.forEach((f, i) => {
     const btn = document.createElement('button');
     btn.className = 'freq-btn' + (f === STATE.currentFreq ? ' active' : '');
     btn.id = 'fBtn_'+f;
-    btn.textContent = FREQ_LABELS[i];
+    btn.textContent = labels[i];
     btn.onclick = () => selectFreq(f);
     grid.appendChild(btn);
   });
+  // grid columns EHF'de daha fazla frekans var
+  grid.style.gridTemplateColumns = freqs.length > 7 ? 'repeat(5,1fr)' : 'repeat(4,1fr)';
 }
 function selectFreq(f) {
   STATE.currentFreq = f;
@@ -1515,9 +1628,10 @@ function savePoint() {
   renderAudiogram();
 
   // Otomatik bir sonraki frekansa geç
-  const idx = FREQS.indexOf(f);
-  if (idx < FREQS.length - 1) {
-    setTimeout(() => selectFreq(FREQS[idx+1]), 300);
+  const freqs = getActiveFreqs();
+  const idx = freqs.indexOf(f);
+  if (idx < freqs.length - 1) {
+    setTimeout(() => selectFreq(freqs[idx+1]), 300);
   }
 }
 
@@ -1588,12 +1702,18 @@ function renderAudiogram() {
   const L=72, R=W-100, T=55, B=H-45;
   const PW=R-L, PH=B-T;
 
-  // Odyogram frekansları (x ekseni) — standart sıra
-  const DIAG_FREQS = [250,500,1000,2000,4000,6000,8000];
-  const DIAG_LABELS = ['250','500','1k','2k','4k','6k','8k'];
+  // Odyogram frekansları — normal veya EHF moduna göre
+  const isEHF = activeFreqSet === 'ehf';
+  const DIAG_FREQS = isEHF
+    ? [8000,9000,10000,11200,12500,14000,16000,18000,20000]
+    : [125,250,500,1000,2000,3000,4000,6000,8000];
+  const DIAG_LABELS = isEHF
+    ? ['8k','9k','10k','11.2k','12.5k','14k','16k','18k','20k']
+    : ['125','250','500','1k','2k','3k','4k','6k','8k'];
 
   function xP(f) {
-    const lo=Math.log10(250), hi=Math.log10(8000);
+    const lo = Math.log10(DIAG_FREQS[0]);
+    const hi = Math.log10(DIAG_FREQS[DIAG_FREQS.length-1]);
     return L+((Math.log10(f)-lo)/(hi-lo))*PW;
   }
   function yP(db) { return T+((db+10)/130)*PH; }
