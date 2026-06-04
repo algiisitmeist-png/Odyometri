@@ -45,7 +45,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 .topbar{
   background:var(--gray);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;height:60px;flex-shrink:0;
+  padding:0 16px;height:52px;flex-shrink:0;
   box-shadow:0 2px 8px rgba(0,0,0,.3);
 }
 .topbar-logo{display:flex;align-items:center;gap:10px}
@@ -116,7 +116,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   height:100%;
 }
 .ctrl-section{padding:12px 16px;border-bottom:1px solid var(--border)}
-.ctrl-section h3{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:12px}
+.ctrl-section h3{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px}
 
 /* Kulak seçici */
 .ear-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -239,14 +239,9 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
    SCREEN 3 — KONUŞMA TESTİ (basit)
 ═══════════════════════════════════════ */
 #sSpeech{
-  flex-direction:column;align-items:center;
-  padding:16px 24px;background:var(--gray);
-  overflow-y:auto;
-}
-.speech-card{
-  background:#fff;border-radius:16px;padding:24px 32px;
-  width:100%;max-width:760px;box-shadow:var(--shadow-lg);
-  margin:auto;
+  flex-direction:column;
+  overflow:hidden;
+  background:var(--gray-light);
 }
 
 /* ═══════════════════════════════════════
@@ -287,16 +282,22 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   .screen{display:flex!important}
 }
 
-/* ThinkPad T14 — 1920x1080 veya 1366x768 */
-@media(max-width:1400px){
-  .ctrl-panel{width:260px}
-  .db-num{font-size:44px}
+/* ThinkPad T14 — 1600x900 optimize */
+@media(max-width:1650px){
+  .ctrl-panel{width:255px}
+  .db-num{font-size:40px}
+  .ctrl-section{padding:10px 14px}
+  .db-display{padding:8px 12px}
+  .play-section{padding:10px 14px}
+  .play-big{padding:15px;font-size:14px}
+  .save-btn{padding:12px;font-size:13px}
+  .freq-btn{padding:8px 2px;font-size:10px}
+  .chart-header{padding:8px 14px}
+  .pta-val{font-size:16px}
 }
 @media(max-width:1100px){
-  .ctrl-panel{width:240px}
-  .db-num{font-size:38px}
-  .play-big{padding:16px;font-size:14px}
-  .save-btn{padding:14px;font-size:13px}
+  .ctrl-panel{width:230px}
+  .db-num{font-size:34px}
 }
 
 </style>
@@ -308,7 +309,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 <div class="topbar">
   <div class="topbar-logo">
     <img src="LOGO.png" alt="Algı" onerror="this.style.display='none'">
-    <span class="topbar-title">Odyometri</span>
+    <span class="topbar-title">İşitme Testi</span>
   </div>
   <div class="topbar-patient" id="topPatient">
     <span>Hasta seçilmedi</span>
@@ -328,8 +329,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       <button class="nav-tab" id="tabResult" onclick="showScreen('sResult')" disabled>📋 Sonuç</button>
       <button class="nav-tab" onclick="showScreen('sSettings')">⚙️ Ayarlar</button>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="testAudioOutput()" id="audioTestBtn" title="Bluetooth kulaklık bağlantısını test et">🎧 Ses Test</button>
-    <button class="btn btn-ghost btn-sm" onclick="exportXML()">⬇ XML</button>
+
     <button class="btn btn-ghost btn-sm" onclick="printReport()">🖨️</button>
   </div>
 </div>
@@ -595,7 +595,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
 <!-- ═══ SCREEN 3: KONUŞMA TESTİ ═══ -->
 <div class="screen" id="sSpeech">
-  <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+  <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:#f0f0f6">
 
     <!-- HEADER -->
     <div style="background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
@@ -630,7 +630,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
     <div style="display:flex;flex:1;overflow:hidden;min-height:0">
 
       <!-- SOL PANEL — SRT + Maskeleme -->
-      <div style="width:320px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);overflow-y:auto;padding:16px">
+      <div style="width:300px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);overflow-y:auto;padding:14px 16px">
 
         <!-- SRT BÖLÜMÜ -->
         <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:10px;border-left:3px solid var(--red);padding-left:8px">SRT Tespiti</div>
@@ -723,10 +723,10 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
         </div>
 
         <!-- Kelime gösterimi -->
-        <div style="flex:1;background:var(--gray-light);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:20px">
+        <div style="flex:1;background:#fff;border-radius:12px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:20px;box-shadow:var(--shadow)">
           <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:10px" id="wordNumLabel">KELİME 1 / 25</div>
-          <div style="font-family:'DM Serif Display',serif;font-size:64px;color:var(--gray);line-height:1" id="spWordText">—</div>
-          <div style="font-size:13px;color:var(--red);margin-top:10px;min-height:20px" id="spWordStatus"></div>
+          <div style="font-family:'DM Serif Display',serif;font-size:72px;color:var(--gray);line-height:1" id="spWordText">—</div>
+          <div style="font-size:14px;color:var(--red);margin-top:12px;min-height:22px;font-weight:600" id="spWordStatus"></div>
         </div>
 
         <!-- Timer -->
@@ -801,8 +801,11 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
       <div style="margin-bottom:20px">
         <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Google Cloud TTS API Key</label>
-        <input type="password" id="settingsApiKey" placeholder="AIza..."
-          style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--gray);outline:none">
+        <div style="position:relative">
+          <input type="password" id="settingsApiKey" placeholder="AIza..."
+            style="width:100%;padding:13px 40px 13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--gray);outline:none">
+          <span id="settingsKeyStatus" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--success);font-weight:700"></span>
+        </div>
         <div style="margin-top:6px;display:flex;gap:8px">
           <button onclick="toggleApiKeyVisibility()" style="font-size:12px;background:none;border:none;color:var(--gray-mid);cursor:pointer;text-decoration:underline">Göster/Gizle</button>
         </div>
@@ -1393,6 +1396,11 @@ function setEar(ear) {
 // ════════════════════════════════════════════════════════════
 // MASKELEME
 // ════════════════════════════════════════════════════════════
+function toggleMaskGuide() {
+  const guide = document.getElementById('maskGuide');
+  if(guide) guide.style.display = guide.style.display === 'none' ? 'block' : 'none';
+}
+
 function toggleMask() {
   STATE.maskActive = document.getElementById('maskToggle').checked;
   document.getElementById('maskDbGroup').style.display = STATE.maskActive ? 'block' : 'none';
@@ -1824,11 +1832,16 @@ function renderAudiogram() {
   });
 
   // ── Eşik eğrileri çiz ──
+  // Standart odyolojik semboller
+  // Maskesiz sağ: O (kırmızı daire)
+  // Maskesiz sol: X (mavi çarpı)
+  // Maskeli sağ: △ (kırmızı üçgen - ISO 8253)
+  // Maskeli sol: □ (mavi kare - ISO 8253)
   const EAR_CFG = [
-    { key:'right', color:'#cc1e1e', symbol:'O', masked:false },
-    { key:'left',  color:'#1565a0', symbol:'X', masked:false },
-    { key:'right', color:'#ff6b6b', symbol:'▪', masked:true },
-    { key:'left',  color:'#42a5f5', symbol:'▪', masked:true },
+    { key:'right', color:'#cc1e1e', symbol:'O',       masked:false },
+    { key:'left',  color:'#1565a0', symbol:'X',       masked:false },
+    { key:'right', color:'#cc1e1e', symbol:'TRIANGLE', masked:true },
+    { key:'left',  color:'#1565a0', symbol:'SQUARE',   masked:true },
   ];
 
   EAR_CFG.forEach(cfg=>{
@@ -2193,20 +2206,26 @@ function replaySpeechWord(){
 
 function markSpeech(correct){
   resetSpTimer();
+  const currentIdx = STATE.speech.wordIdx; // mevcut kelime index
   STATE.speech.results.push(correct);
-  // earState'i de güncelle
+
+  // Mevcut kelimenin dot'unu işaretle
+  const dot = document.getElementById('spDot_'+currentIdx);
+  if(dot){
+    dot.style.background = correct?'var(--success-light)':'var(--red-light)';
+    dot.style.color = correct?'var(--success)':'var(--red)';
+    dot.textContent = correct?'✓':'✗';
+  }
+
+  // Sonraki kelimeye geç
+  STATE.speech.wordIdx = currentIdx + 1;
+
+  // earState güncelle
   const es = STATE.speech.earState[STATE.speech.ear];
   es.results = STATE.speech.results;
-  es.wordIdx = STATE.speech.wordIdx + 1;
+  es.wordIdx = STATE.speech.wordIdx;
 
-  const dot=document.getElementById('spDot_'+STATE.speech.wordIdx);
-  if(dot){
-    dot.style.background=correct?'var(--success-light)':'var(--red-light)';
-    dot.style.color=correct?'var(--success)':'var(--red)';
-    dot.textContent=correct?'✓':'✗';
-  }
-  STATE.speech.wordIdx++;
-  setTimeout(showSpeechWord,500);
+  setTimeout(showSpeechWord, 400);
 }
 
 // Önceki kelimeye dön
@@ -2427,11 +2446,15 @@ function saveSettings() {
   if (key) {
     localStorage.setItem('gtts_api_key', key);
     STATE.googleTtsKey = key;
+    // Tik işaretini API key alanına ekle
+    const keyInput = document.getElementById('settingsApiKey');
+    if(keyInput) keyInput.style.borderColor = 'var(--success)';
+    document.getElementById('settingsKeyStatus').innerHTML = '✓';
   }
   localStorage.setItem('gtts_speed', speed);
   STATE.ttsSpeed = parseFloat(speed);
   document.getElementById('settingsStatus').innerHTML =
-    '<span style="color:var(--success);font-weight:700">✓ Kaydedildi</span>';
+    '<span style="color:var(--success);font-weight:700">✓ Kaydedildi — API key aktif</span>';
   setTimeout(() => {
     document.getElementById('settingsStatus').textContent = '';
   }, 2000);
@@ -2484,6 +2507,13 @@ function openSettings() {
   document.getElementById('settingsApiKey').value = key;
   document.getElementById('settingsTtsSpeed').value = speed;
   document.getElementById('ttsSpeedVal').textContent = speed;
+  // Kayıtlı key varsa tik göster
+  if(key) {
+    const keyInput = document.getElementById('settingsApiKey');
+    if(keyInput) keyInput.style.borderColor = 'var(--success)';
+    const keyStatus = document.getElementById('settingsKeyStatus');
+    if(keyStatus) keyStatus.innerHTML = '✓';
+  }
 }
 
 // ════════════════════════════════════════════════════════════
