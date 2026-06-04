@@ -540,6 +540,14 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
           <div class="pta-label">PTA Sol</div>
           <div class="pta-val left" id="ptaLeft">—</div>
         </div>
+        <div class="pta-item" style="border-left:1px solid var(--border);padding-left:12px;margin-left:4px">
+          <div class="pta-label" style="color:var(--success)">SRT Sağ</div>
+          <div class="pta-val" style="color:var(--success);font-size:16px" id="safSesSRT_right">—</div>
+        </div>
+        <div class="pta-item">
+          <div class="pta-label" style="color:var(--success)">SRT Sol</div>
+          <div class="pta-val" style="color:var(--success);font-size:16px" id="safSesSRT_left">—</div>
+        </div>
       </div>
       <button class="btn btn-sm" style="background:var(--gray);color:#fff;border-radius:8px"
         onclick="showScreen('sSpeech')">Konuşma Testi →</button>
@@ -587,155 +595,184 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
 <!-- ═══ SCREEN 3: KONUŞMA TESTİ ═══ -->
 <div class="screen" id="sSpeech">
-  <div class="speech-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Konuşmayı Anlama Testi</div>
-        <h2 style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--gray)">Kelime Tanıma Testi</h2>
+  <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+
+    <!-- HEADER -->
+    <div style="background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red)">Konuşmayı Anlama</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--gray);line-height:1.1" id="spActiveEarBadge">Kulak Seçin</div>
+        </div>
+        <!-- Kulak seçimi -->
+        <div style="display:flex;gap:8px">
+          <button onclick="setSpeechEar('right')" id="spEarRight"
+            style="padding:8px 18px;border-radius:8px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--gray-mid);transition:all .18s;position:relative">
+            👂 Sağ
+            <span id="spEarRightDone" style="display:none;position:absolute;top:-6px;right:-6px;font-size:9px;background:var(--success);color:#fff;padding:1px 5px;border-radius:8px">✓</span>
+          </button>
+          <button onclick="setSpeechEar('left')" id="spEarLeft"
+            style="padding:8px 18px;border-radius:8px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--gray-mid);transition:all .18s;position:relative">
+            👂 Sol
+            <span id="spEarLeftDone" style="display:none;position:absolute;top:-6px;right:-6px;font-size:9px;background:var(--success);color:#fff;padding:1px 5px;border-radius:8px">✓</span>
+          </button>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:11px;color:var(--gray-mid);background:var(--gray-light);padding:4px 10px;border-radius:6px">
-          <kbd style="font-family:inherit">Enter</kbd>=Doğru &nbsp; <kbd style="font-family:inherit">Space</kbd>=Yanlış
+          <kbd>Enter</kbd>=Doğru &nbsp;<kbd>Space</kbd>=Yanlış
         </div>
         <button onclick="showScreen('sAudiometry')" class="btn btn-sm" style="background:var(--gray-light);color:var(--gray);border:none">← Saf Ses</button>
       </div>
     </div>
 
-    <!-- Kulak seçimi — aktif kulak belirtilir -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <button onclick="setSpeechEar('right')" id="spEarRight"
-        style="padding:14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-mid);transition:all .2s;position:relative">
-        👂 Sağ Kulak
-        <span id="spEarRightDone" style="display:none;position:absolute;top:6px;right:8px;font-size:10px;background:var(--success);color:#fff;padding:2px 6px;border-radius:10px">✓ Tamamlandı</span>
-      </button>
-      <button onclick="setSpeechEar('left')" id="spEarLeft"
-        style="padding:14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-mid);transition:all .2s;position:relative">
-        👂 Sol Kulak
-        <span id="spEarLeftDone" style="display:none;position:absolute;top:6px;right:8px;font-size:10px;background:var(--success);color:#fff;padding:2px 6px;border-radius:10px">✓ Tamamlandı</span>
-      </button>
-    </div>
+    <!-- ANA İÇERİK — 2 kolon -->
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Aktif kulak göstergesi -->
-    <div id="spActiveEarBadge" style="display:none;background:var(--gray);color:#fff;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;margin-bottom:14px;text-align:center"></div>
+      <!-- SOL PANEL — SRT + Maskeleme -->
+      <div style="width:320px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);overflow-y:auto;padding:16px">
 
-    <!-- SRT bölümü -->
-    <div style="background:var(--gray-light);border-radius:14px;padding:20px;margin-bottom:18px">
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:12px">SRT Tespiti — Konuşma Testi</div>
+        <!-- SRT BÖLÜMÜ -->
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:10px;border-left:3px solid var(--red);padding-left:8px">SRT Tespiti</div>
 
-      <!-- dB dropdown seçici -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <div style="font-size:12px;color:var(--gray-mid);font-weight:600">Seviye seç:</div>
-        <div style="position:relative">
-          <select id="srtLevelSelect" onchange="setSrtLevel(+this.value)"
-            style="appearance:none;-webkit-appearance:none;padding:10px 36px 10px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray);cursor:pointer;outline:none">
-            <option value="50">50 dB</option>
-            <option value="55">55 dB</option>
-            <option value="60">60 dB</option>
-            <option value="65" selected>65 dB</option>
-            <option value="70">70 dB</option>
-            <option value="75">75 dB</option>
-            <option value="80">80 dB</option>
-            <option value="85">85 dB</option>
-            <option value="90">90 dB</option>
-            <option value="95">95 dB</option>
-            <option value="100">100 dB</option>
-          </select>
-          <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-mid)">▼</div>
+        <!-- "Beni rahat duyuyor musunuz?" + dropdown + oynat + kaydet -->
+        <div style="background:var(--gray-light);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:10px">🗣️ "Beni rahat duyuyor musunuz?"</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <!-- Dropdown 55-110 dB -->
+            <div style="position:relative">
+              <select id="srtLevelSelect" onchange="setSrtLevel(+this.value)"
+                style="appearance:none;-webkit-appearance:none;padding:9px 32px 9px 12px;border-radius:8px;border:2px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray);cursor:pointer;outline:none;min-width:90px">
+                <option value="55">55 dB</option>
+                <option value="60">60 dB</option>
+                <option value="65" selected>65 dB</option>
+                <option value="70">70 dB</option>
+                <option value="75">75 dB</option>
+                <option value="80">80 dB</option>
+                <option value="85">85 dB</option>
+                <option value="90">90 dB</option>
+                <option value="95">95 dB</option>
+                <option value="100">100 dB</option>
+                <option value="105">105 dB</option>
+                <option value="110">110 dB</option>
+              </select>
+              <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-mid);font-size:11px">▼</div>
+            </div>
+            <!-- Oynat -->
+            <button onclick="playSrtSpeech()" id="srtPlayBtn"
+              style="padding:9px 14px;border-radius:8px;border:none;background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+              ▶ Oynat
+            </button>
+            <!-- Kaydet -->
+            <button onclick="saveSrt()"
+              style="padding:9px 14px;border-radius:8px;border:none;background:var(--success);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+              ✓ Kaydet
+            </button>
+          </div>
+          <div id="srtSaved" style="margin-top:8px;font-size:12px;font-weight:700;color:var(--success)"></div>
         </div>
-      </div>
 
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-        <div style="font-family:'DM Serif Display',serif;font-size:38px;color:var(--gray)" id="srtDbDisplay">65</div>
-        <div style="color:var(--gray-mid);font-size:13px">dB HL</div>
-        <div style="display:flex;gap:6px">
-          <button onclick="stepSrtDb(-5)" class="db-btn" style="width:40px;height:40px;font-size:16px">−5</button>
-          <button onclick="stepSrtDb(-1)" class="db-btn" style="width:40px;height:40px;font-size:14px">−1</button>
-          <button onclick="stepSrtDb(+1)" class="db-btn" style="width:40px;height:40px;font-size:14px">+1</button>
-          <button onclick="stepSrtDb(+5)" class="db-btn" style="width:40px;height:40px;font-size:16px">+5</button>
+        <!-- MASKELEME -->
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px;border-left:3px solid var(--warning);padding-left:8px">Maskeleme</div>
+        <div style="background:var(--gray-light);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:600;color:var(--gray)">Maskeleme Aktif</span>
+            <label class="toggle-sw">
+              <input type="checkbox" id="spMaskToggle" onchange="toggleSpeechMask()">
+              <div class="toggle-track"></div>
+              <div class="toggle-knob"></div>
+            </label>
+          </div>
+          <div id="spMaskGroup" style="display:none">
+            <div style="font-size:11px;color:var(--gray-mid);margin-bottom:4px">Maskeleme şiddeti (karşı kulak):</div>
+            <input type="range" id="spMaskSlider" min="20" max="100" step="5" value="60"
+              oninput="updateSpeechMaskDb(this.value)"
+              style="width:100%;accent-color:var(--warning)">
+            <div style="text-align:center;font-size:13px;font-weight:700;color:var(--warning)" id="spMaskDbVal">60 dB</div>
+          </div>
         </div>
-        <button onclick="playSrtSpeech()" class="btn btn-sm" style="background:var(--gray);color:#fff">
-          🗣️ "Beni duyuyor musunuz?"
-        </button>
-        <button onclick="saveSrt()" class="btn btn-sm" style="background:var(--success);color:#fff">✓ SRT Kaydet</button>
-      </div>
-      <div style="font-size:12px;color:var(--gray-mid)">Hastanın %50 yanıt verdiği seviyeyi belirleyip kaydedin</div>
-      <div id="srtSaved" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--success)"></div>
-    </div>
 
-    <!-- Kelime testi -->
-    <div id="wordTestSection">
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:10px">Kelime Tanıma (%)</div>
+        <!-- SRT ÖZET -->
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px;border-left:3px solid var(--success);padding-left:8px">Kaydedilen SRT</div>
+        <div style="background:var(--gray-light);border-radius:10px;padding:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;color:var(--right-color);font-weight:700">👂 Sağ</span>
+            <span style="font-size:14px;font-weight:800;color:var(--right-color)" id="srtSummaryRight">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:12px;color:var(--left-color);font-weight:700">👂 Sol</span>
+            <span style="font-size:14px;font-weight:800;color:var(--left-color)" id="srtSummaryLeft">—</span>
+          </div>
+        </div>
 
-      <!-- Canlı dB kontrolü -->
-      <div style="background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font-size:12px;font-weight:700;color:var(--gray-mid);white-space:nowrap">Konuşma Sesi:</div>
-        <button onclick="stepSpeechDb(-5)"
-          style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−5</button>
-        <button onclick="stepSpeechDb(-1)"
-          style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−1</button>
-        <div style="font-family:'DM Serif Display',serif;font-size:28px;font-weight:800;color:var(--gray);min-width:60px;text-align:center" id="speechDbDisplay">—</div>
-        <div style="font-size:12px;color:var(--gray-mid)">dB HL</div>
-        <button onclick="stepSpeechDb(+1)"
-          style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+1</button>
-        <button onclick="stepSpeechDb(+5)"
-          style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+5</button>
-        <div style="font-size:10px;color:var(--gray-mid);margin-left:4px" id="speechPtaHint"></div>
       </div>
 
-      <div style="background:var(--gray-light);border-radius:14px;padding:20px;margin-bottom:12px;text-align:center;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px" id="wordNumLabel">KELİME 1 / 25</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:48px;color:var(--gray);line-height:1" id="spWordText">—</div>
-        <div style="font-size:13px;color:var(--red);margin-top:8px;min-height:20px" id="spWordStatus"></div>
+      <!-- SAĞ PANEL — Kelime Testi -->
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:16px;gap:12px">
+
+        <!-- Kelime okuma seviyesi kontrolü -->
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <span style="font-size:11px;font-weight:700;color:var(--gray-mid);white-space:nowrap">Okuma Seviyesi:</span>
+          <button onclick="stepSpeechDb(-5)"
+            style="width:44px;height:44px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:18px;font-weight:700;cursor:pointer">−5</button>
+          <div style="font-family:'DM Serif Display',serif;font-size:32px;font-weight:800;color:var(--gray);min-width:70px;text-align:center" id="speechDbDisplay">—</div>
+          <div style="font-size:12px;color:var(--gray-mid)">dB HL</div>
+          <button onclick="stepSpeechDb(+5)"
+            style="width:44px;height:44px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:18px;font-weight:700;cursor:pointer">+5</button>
+          <div style="font-size:10px;color:var(--gray-mid);margin-left:4px" id="speechPtaHint"></div>
+        </div>
+
+        <!-- Kelime gösterimi -->
+        <div style="flex:1;background:var(--gray-light);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:20px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:10px" id="wordNumLabel">KELİME 1 / 25</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:64px;color:var(--gray);line-height:1" id="spWordText">—</div>
+          <div style="font-size:13px;color:var(--red);margin-top:10px;min-height:20px" id="spWordStatus"></div>
+        </div>
+
+        <!-- Timer -->
+        <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0">
+          <div id="spTimerFill" style="height:100%;border-radius:3px;width:0%;background:var(--red);transition:width linear"></div>
+        </div>
+
+        <!-- Score dots -->
+        <div style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0" id="spScoreDots"></div>
+
+        <!-- Ana butonlar -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;flex-shrink:0">
+          <button onclick="startWordTest()" id="spStartBtn"
+            style="padding:14px;border-radius:10px;border:none;background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+            ▶ Başlat
+          </button>
+          <button onclick="markSpeech(true)" id="spCorrectBtn" disabled
+            style="padding:14px;border-radius:10px;border:2px solid #b8e0cc;background:#fff;color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;opacity:.4">
+            ✅ Doğru <small style="font-size:10px;opacity:.7">[Enter]</small>
+          </button>
+          <button onclick="markSpeech(false)" id="spWrongBtn" disabled
+            style="padding:14px;border-radius:10px;border:2px solid #fecdd3;background:#fff;color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;opacity:.4">
+            ❌ Yanlış <small style="font-size:10px;opacity:.7">[Space]</small>
+          </button>
+        </div>
+
+        <!-- Yardımcı butonlar -->
+        <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
+          <button onclick="replaySpeechWord()"
+            style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer">
+            🔄 Tekrar Oku
+          </button>
+          <button onclick="goPrevWord()" id="spPrevBtn" disabled
+            style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer;opacity:.4">
+            ← Önceki
+          </button>
+          <button onclick="restartWordTest()" id="spRestartBtn" disabled
+            style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer;opacity:.4">
+            ↺ Başa Dön
+          </button>
+        </div>
+
       </div>
-
-      <!-- Timer bar -->
-      <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:12px;overflow:hidden">
-        <div id="spTimerFill" style="height:100%;border-radius:2px;width:0%;background:var(--red);transition:width linear"></div>
-      </div>
-
-      <!-- Dots -->
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" id="spScoreDots"></div>
-
-      <!-- Ana butonlar -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <button onclick="startWordTest()" id="spStartBtn"
-          style="padding:14px;border-radius:10px;border:none;background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
-          ▶ Başlat
-        </button>
-        <button onclick="markSpeech(true)" id="spCorrectBtn" disabled
-          style="padding:14px;border-radius:10px;border:2px solid #b8e0cc;background:#fff;color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;opacity:.4">
-          ✅ Doğru <small style="font-size:10px;opacity:.7">[Enter]</small>
-        </button>
-        <button onclick="markSpeech(false)" id="spWrongBtn" disabled
-          style="padding:14px;border-radius:10px;border:2px solid #fecdd3;background:#fff;color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;opacity:.4">
-          ❌ Yanlış <small style="font-size:10px;opacity:.7">[Space]</small>
-        </button>
-      </div>
-
-      <!-- Yardımcı butonlar -->
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;flex-wrap:wrap">
-        <button onclick="replaySpeechWord()" style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer">
-          🔄 Tekrar Oku
-        </button>
-        <button onclick="goPrevWord()" id="spPrevBtn" disabled
-          style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer;opacity:.4">
-          ← Önceki Kelime
-        </button>
-        <button onclick="restartWordTest()" id="spRestartBtn" disabled
-          style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-mid);cursor:pointer;opacity:.4">
-          ↺ Başa Dön
-        </button>
-      </div>
-    </div>
-
-    <div style="margin-top:20px;text-align:right">
-      <button onclick="showScreen('sResult')" class="btn" style="background:var(--red);color:#fff">
-        Sonuçları Gör →
-      </button>
     </div>
   </div>
 </div>
-
 <!-- ═══ SCREEN 4: SONUÇ ═══ -->
 <div class="screen" id="sResult">
   <div class="result-card">
@@ -781,8 +818,18 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
       <div style="margin-bottom:28px">
         <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Ses Testi</label>
-        <button onclick="testGoogleTTS()" style="padding:12px 20px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray)">
-          ▶ Test: "Merhaba, bu bir ses testidir."
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button onclick="setTtsTestEar('right')" id="ttsEarRight"
+            style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--right-color);background:#fff5f5;color:var(--right-color);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+            👂 Sağ
+          </button>
+          <button onclick="setTtsTestEar('left')" id="ttsEarLeft"
+            style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+            👂 Sol
+          </button>
+        </div>
+        <button onclick="testGoogleTTS()" style="width:100%;padding:12px 20px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray)">
+          ▶ "Merhaba, bu bir ses testidir."
         </button>
       </div>
 
@@ -925,21 +972,33 @@ let STATE = {
     right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
     left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
   },
-  // Konuşma testi — her kulak için ayrı durum
+  // Konuşma testi — tamamen bağımsız kulak state
   speech: {
     ear: 'right',
-    srt: {right:null, left:null},
-    scores: {right:null, left:null},
-    speechDb: null,
-    // Her kulak için ayrı kelime listesi ve ilerleme
+    maskActive: false,
+    maskDb: 60,
+    // Her kulak için TAM BAĞIMSIZ veri
     earState: {
-      right: { wordIdx:0, wordList:[], results:[], started:false },
-      left:  { wordIdx:0, wordList:[], results:[], started:false }
+      right: { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null },
+      left:  { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null }
     },
-    // Aktif kulağın shortcut'ları
-    wordIdx: 0,
-    wordList: [],
-    results: []
+    // Kısayol (aktif kulağa işaret eder)
+    get srt()    { return {right: this.earState.right.srt,     left: this.earState.left.srt}; },
+    get scores() {
+      const r = this.earState.right, l = this.earState.left;
+      return {
+        right: r.results.length===25 ? {pct:Math.round(r.results.filter(Boolean).length/25*100), correct:r.results.filter(Boolean).length, total:25, db:r.speechDb} : null,
+        left:  l.results.length===25 ? {pct:Math.round(l.results.filter(Boolean).length/25*100), correct:l.results.filter(Boolean).length, total:25, db:l.speechDb} : null,
+      };
+    },
+    get speechDb() { return this.earState[this.ear].speechDb; },
+    set speechDb(v){ this.earState[this.ear].speechDb = v; },
+    get wordIdx()  { return this.earState[this.ear].wordIdx; },
+    set wordIdx(v) { this.earState[this.ear].wordIdx = v; },
+    get wordList() { return this.earState[this.ear].wordList; },
+    set wordList(v){ this.earState[this.ear].wordList = v; },
+    get results()  { return this.earState[this.ear].results; },
+    set results(v) { this.earState[this.ear].results = v; },
   },
   actx: null,
   toneOsc: null,
@@ -1853,18 +1912,25 @@ function setSpeechEar(ear) {
   STATE.speech.ear = ear;
   ['right','left'].forEach(e=>{
     const btn = document.getElementById('spEar'+e.charAt(0).toUpperCase()+e.slice(1));
-    btn.style.borderColor = e===ear?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--border)';
-    btn.style.color = e===ear?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--gray-mid)';
-    btn.style.background = e===ear?(e==='right'?'#fff5f5':'#e8f4fd'):'#fff';
-    btn.style.fontWeight = e===ear?'800':'700';
+    if(!btn) return;
+    const active = e===ear;
+    btn.style.borderColor = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--border)';
+    btn.style.color = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--gray-mid)';
+    btn.style.background = active?(e==='right'?'#fff5f5':'#e8f4fd'):'#fff';
+    btn.style.fontWeight = active?'800':'700';
   });
-  // Aktif kulak badge
+  // Başlık güncelle
   const badge = document.getElementById('spActiveEarBadge');
-  if(badge){
-    badge.style.display='block';
-    badge.style.background = ear==='right'?'var(--right-color)':'var(--left-color)';
-    badge.textContent = (ear==='right'?'👂 SAĞ KULAK TEST EDİLİYOR':'👂 SOL KULAK TEST EDİLİYOR');
-  }
+  if(badge) badge.textContent = (ear==='right'?'👂 Sağ Kulak':'👂 Sol Kulak');
+
+  // SRT dropdown'ı mevcut kulağın değerine getir
+  const es = STATE.speech.earState[ear];
+  const srtSel = document.getElementById('srtLevelSelect');
+  if(srtSel && es.srt) srtSel.value = es.srt;
+
+  // Maskeleme paneli state'ini güncelle — karşı kulağa gidecek
+  const maskPan = document.getElementById('spMaskToggle');
+  if(maskPan) maskPan.checked = STATE.speech.maskActive;
   // PTA hesapla → SRT önerisi = PTA + 20 dB
   const ptaFreqs=[500,1000,2000,4000];
   const vals=ptaFreqs.map(f=>STATE.thresholds[ear][f]).filter(v=>v!==null);
@@ -1880,14 +1946,14 @@ function setSpeechEar(ear) {
     if(!STATE.speech.speechDb) STATE.speech.speechDb = 65;
     updateSpeechDbDisplay();
   }
-  // Start butonunu güncelle — kaldığı yerden devam et
-  const es = STATE.speech.earState[ear];
+  // Start butonunu güncelle
   const startBtn = document.getElementById('spStartBtn');
   if(startBtn) {
     startBtn.disabled = false;
     startBtn.style.opacity = '1';
     if(es.started && es.wordIdx > 0 && es.wordIdx < 25) {
       startBtn.textContent = `▶ Devam Et (${es.wordIdx}/25)`;
+      startBtn.style.background = 'var(--gray)';
     } else if(es.wordIdx >= 25) {
       startBtn.textContent = '✓ Tamamlandı';
       startBtn.style.background = 'var(--success)';
@@ -1896,14 +1962,32 @@ function setSpeechEar(ear) {
       startBtn.style.background = 'var(--gray)';
     }
   }
+  // SRT dropdown'ı bu kulağın değerine getir
+  if(es.srt) {
+    srtDb = es.srt;
+    const sel = document.getElementById('srtLevelSelect');
+    if(sel) sel.value = es.srt;
+    const srtSavedEl = document.getElementById('srtSaved');
+    if(srtSavedEl) srtSavedEl.textContent = `✓ SRT: ${es.srt} dB HL`;
+  } else {
+    const srtSavedEl = document.getElementById('srtSaved');
+    if(srtSavedEl) srtSavedEl.textContent = '';
+  }
+  // Kelime seviyesi göstergesini güncelle
+  updateSpeechDbDisplay();
+  // Özet güncelle
+  updateSrtSummary();
 }
 
 function setSrtLevel(db){
   srtDb = db;
-  document.getElementById('srtDbDisplay').textContent = srtDb;
-  // Dropdown'ı sync et
+  // Aktif kulağın earState'ini de güncelle
+  STATE.speech.earState[STATE.speech.ear].speechDb = db;
+  const el = document.getElementById('srtDbDisplay');
+  if(el) el.textContent = db;
   const sel = document.getElementById('srtLevelSelect');
   if(sel) sel.value = db;
+  updateSpeechDbDisplay();
 }
 
 function stepSrtDb(v){
@@ -1926,12 +2010,34 @@ async function playSrtSpeech(){
 }
 
 function stepSpeechDb(v){
-  STATE.speech.speechDb = Math.max(0, Math.min(120, (STATE.speech.speechDb||srtDb) + v));
+  const es = STATE.speech.earState[STATE.speech.ear];
+  const cur = es.speechDb || srtDb || 65;
+  const newDb = Math.max(30, Math.min(120, cur + v));
+  es.speechDb = newDb;
+  // SRT'yi de güncelle
+  es.srt = newDb;
+  if(!STATE.speechSRT) STATE.speechSRT = {right:null,left:null};
+  STATE.speechSRT[STATE.speech.ear] = newDb;
   updateSpeechDbDisplay();
+  updateSrtSummary();
+  updateSafSesSRTTab();
+  // Sonraki kelimede uygulanacak — toast ile bildir
+  showToast('Seviye: '+newDb+' dB — sonraki kelimede aktif', '');
+}
+
+function toggleSpeechMask() {
+  STATE.speech.maskActive = document.getElementById('spMaskToggle').checked;
+  document.getElementById('spMaskGroup').style.display = STATE.speech.maskActive ? 'block' : 'none';
+}
+
+function updateSpeechMaskDb(val) {
+  STATE.speech.maskDb = +val;
+  document.getElementById('spMaskDbVal').textContent = val+' dB';
 }
 
 function updateSpeechDbDisplay(){
-  const db = STATE.speech.speechDb || srtDb || 65;
+  const es = STATE.speech.earState[STATE.speech.ear];
+  const db = es.speechDb || srtDb || 65;
   const el = document.getElementById('speechDbDisplay');
   if(el) el.textContent = db;
 }
@@ -1951,11 +2057,43 @@ function playSrtTone(){
 }
 
 function saveSrt(){
-  const ear=STATE.speech.ear;
-  STATE.speech.srt[ear]=srtDb;
-  document.getElementById('srtSaved').textContent=
-    `✓ ${ear==='right'?'Sağ':'Sol'} kulak SRT: ${srtDb} dB HL`;
-  showToast('SRT kaydedildi: '+srtDb+' dB','success');
+  const ear = STATE.speech.ear;
+  const db = srtDb;
+  // Konuşma earState'e kaydet
+  STATE.speech.earState[ear].srt = db;
+  STATE.speech.earState[ear].speechDb = db; // Kelime okuma seviyesi SRT'den başlasın
+  // Saf Ses testine de kaydet
+  STATE.thresholds[ear][1000]; // kontrol
+  // SRT için özel alan — STATE'e ekle
+  if(!STATE.speechSRT) STATE.speechSRT = {right:null,left:null};
+  STATE.speechSRT[ear] = db;
+  // Saf Ses'teki SRT sekmesini güncelle
+  updateSafSesSRTTab();
+  // UI güncelle
+  document.getElementById('srtSaved').textContent = `✓ ${ear==='right'?'Sağ':'Sol'} SRT: ${db} dB HL kaydedildi`;
+  // Özet güncelle
+  updateSrtSummary();
+  // speechDb göstergesini güncelle
+  updateSpeechDbDisplay();
+  showToast('SRT: '+db+' dB kaydedildi','success');
+}
+
+function updateSrtSummary() {
+  const rEl = document.getElementById('srtSummaryRight');
+  const lEl = document.getElementById('srtSummaryLeft');
+  const r = STATE.speech.earState.right.srt;
+  const l = STATE.speech.earState.left.srt;
+  if(rEl) rEl.textContent = r !== null ? r+' dB' : '—';
+  if(lEl) lEl.textContent = l !== null ? l+' dB' : '—';
+}
+
+function updateSafSesSRTTab() {
+  // Saf Ses sayfasındaki SRT görüntüleme kutucuklarını güncelle
+  ['right','left'].forEach(ear => {
+    const srt = STATE.speech.earState[ear].srt;
+    const el = document.getElementById('safSesSRT_'+ear);
+    if(el) el.textContent = srt !== null ? srt+' dB' : '—';
+  });
 }
 
 // Kelime testi
@@ -2108,10 +2246,10 @@ function restartWordTest(){
 }
 
 function finishSpeechEar(){
-  const ear=STATE.speech.ear;
-  const correct=STATE.speech.results.filter(Boolean).length;
-  const pct=Math.round(correct/25*100);
-  STATE.speech.scores[ear]={correct,total:25,pct,db:srtDb};
+  const ear = STATE.speech.ear;
+  const es = STATE.speech.earState[ear];
+  const correct = es.results.filter(Boolean).length;
+  const pct = Math.round(correct/25*100);
   document.getElementById('spWordText').textContent='✅';
   document.getElementById('spWordStatus').textContent=`${correct}/25 doğru — %${pct}`;
   document.getElementById('wordNumLabel').textContent='TEST TAMAMLANDI';
@@ -2120,8 +2258,7 @@ function finishSpeechEar(){
   document.getElementById('spStartBtn').disabled=false;
   document.getElementById('spStartBtn').style.opacity='1';
   showToast(`${ear==='right'?'Sağ':'Sol'} kulak: %${pct} doğru`,'success');
-  // Tamamlanan kulak badge'ini göster
-  const doneBadge=document.getElementById('spEar'+(ear==='right'?'Right':'Left')+'Done');
+  const doneBadge = document.getElementById('spEar'+(ear==='right'?'Right':'Left')+'Done');
   if(doneBadge) doneBadge.style.display='inline';
 
   // Diğer kulağa geçiş uyarısı
@@ -2306,6 +2443,19 @@ function toggleApiKeyVisibility() {
   input.type = input.type === 'password' ? 'text' : 'password';
 }
 
+let ttsTestEar = 'right';
+function setTtsTestEar(ear) {
+  ttsTestEar = ear;
+  ['right','left'].forEach(e => {
+    const btn = document.getElementById('ttsEar'+e.charAt(0).toUpperCase()+e.slice(1));
+    if(!btn) return;
+    const active = e===ear;
+    btn.style.borderColor = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--border)';
+    btn.style.background = active?(e==='right'?'#fff5f5':'#e8f4fd'):'#fff';
+    btn.style.color = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--gray-mid)';
+  });
+}
+
 async function testGoogleTTS() {
   const key = document.getElementById('settingsApiKey').value.trim()
     || localStorage.getItem('gtts_api_key');
@@ -2315,11 +2465,15 @@ async function testGoogleTTS() {
     return;
   }
   STATE.googleTtsKey = key;
+  // Test için geçici olarak seçili kulağı ayarla
+  const prevEar = STATE.speech.ear;
+  STATE.speech.ear = ttsTestEar;
   document.getElementById('settingsStatus').innerHTML =
-    '<span style="color:var(--gray-mid)">⏳ Test ediliyor…</span>';
+    `<span style="color:var(--gray-mid)">⏳ ${ttsTestEar==='right'?'Sağ':'Sol'} kulak test ediliyor…</span>`;
   await googleSpeak('Merhaba, bu bir ses testidir. Bir, iki, üç.', () => {
     document.getElementById('settingsStatus').innerHTML =
-      '<span style="color:var(--success);font-weight:700">✓ Google TTS çalışıyor!</span>';
+      `<span style="color:var(--success);font-weight:700">✓ ${ttsTestEar==='right'?'Sağ':'Sol'} kulak çalışıyor!</span>`;
+    STATE.speech.ear = prevEar;
   });
 }
 
@@ -2337,83 +2491,492 @@ function openSettings() {
 // ════════════════════════════════════════════════════════════
 function exportXML(){
   if(!STATE.patient){showToast('Önce hasta kaydı yapın','error');return;}
-  const p=STATE.patient;
-  const now=new Date().toISOString();
+  const p = STATE.patient;
+  const now = new Date().toISOString();
+  const testDate = new Date(p.date).toISOString();
 
-  function thresholdXML(ear,masked){
-    const src=masked?STATE.maskedThresholds:STATE.thresholds;
-    const side=ear==='right'?'Right':'Left';
-    const pres=masked?'Contralateral':'Ipsilateral';
-    const allFreqs=[250,500,1000,2000,4000,6000,8000];
-    let pts='';
-    allFreqs.forEach(f=>{
-      const db=src[ear][f];
-      if(db===null) return;
-      pts+=`      <TonePoint>
-        <Frequency>${f}</Frequency>
-        <Decibel>${db}</Decibel>
-        <MeasurementConditions>
-          <StimulusSignalType>Pure tone</StimulusSignalType>
-          <MaskingSignalType>Narrow Band</MaskingSignalType>
-          <StimulusSignalOutput>${side}</StimulusSignalOutput>
-          <MaskingSignalOutput>${masked?pres:'None'}</MaskingSignalOutput>
-          <StimulusdBWeighting>HL</StimulusdBWeighting>
-          <MaskingdBWeighting>HL</MaskingdBWeighting>
-          <StimulusPresentationType>Air</StimulusPresentationType>
-          <MaskingPresentationType>${masked?'Air':'None'}</MaskingPresentationType>
-        </MeasurementConditions>
-      </TonePoint>\n`;
+  // Doğum tarihi Noah formatı: YYYY-MM-DD
+  const dob = p.dob || '';
+
+  // Cinsiyet: M/F → Male/Female
+  const gender = p.gender === 'M' ? 'Male' : p.gender === 'F' ? 'Female' : 'Unknown';
+
+  // Tüm frekanslar (standart + EHF)
+  const ALL_FREQS = [125,250,500,1000,2000,3000,4000,6000,8000,9000,10000,11200,12500,14000,16000,18000,20000];
+
+  function tonePointsXML(ear, masked) {
+    const src = masked ? STATE.maskedThresholds : STATE.thresholds;
+    const side = ear === 'right' ? 'Right' : 'Left';
+    const maskOut = masked ? 'Contralateral' : 'None';
+    const maskPres = masked ? 'Air' : 'None';
+    let pts = '';
+    ALL_FREQS.forEach(f => {
+      const db = src[ear][f];
+      if(db === null) return;
+      const nr = STATE.noResponse[ear][f];
+      const stimType = STATE.stimulus === 'warble' ? 'Warble tone' :
+                       STATE.stimulus === 'pulse'  ? 'Pulsed tone' : 'Pure tone';
+      pts += `        <TonePoint>
+          <Frequency>${f}</Frequency>
+          <Decibel>${db}</Decibel>
+          ${nr ? '<NoResponse>true</NoResponse>' : ''}
+          <MeasurementConditions>
+            <StimulusSignalType>${stimType}</StimulusSignalType>
+            <MaskingSignalType>Narrow Band Noise</MaskingSignalType>
+            <StimulusSignalOutput>${side}</StimulusSignalOutput>
+            <MaskingSignalOutput>${maskOut}</MaskingSignalOutput>
+            <StimulusdBWeighting>HL</StimulusdBWeighting>
+            <MaskingdBWeighting>HL</MaskingdBWeighting>
+            <StimulusPresentationType>Air</StimulusPresentationType>
+            <MaskingPresentationType>${maskPres}</MaskingPresentationType>
+          </MeasurementConditions>
+        </TonePoint>\n`;
     });
     return pts;
   }
 
-  const xml=`<?xml version="1.0" encoding="UTF-8"?>
-<HIMSAAudiometricStandard Version="500" xmlns="http://www.himsa.com/Measurement/Audiogram">
-  <!-- Algı İşitme Odyometri Uygulaması — ${now} -->
-  <ToneThresholdAudiogram>
-    <!-- SAĞ KULAK -->
-    <AudMeasurementConditions>
-      <StimulusSignalType>Pure tone</StimulusSignalType>
-      <MaskingSignalType>Narrow Band</MaskingSignalType>
-      <StimulusSignalOutput>Right</StimulusSignalOutput>
-      <MaskingSignalOutput>None</MaskingSignalOutput>
-      <StimulusdBWeighting>HL</StimulusdBWeighting>
-      <MaskingdBWeighting>HL</MaskingdBWeighting>
-      <StimulusPresentationType>Air</StimulusPresentationType>
-      <MaskingPresentationType>None</MaskingPresentationType>
-    </AudMeasurementConditions>
-    <TonePoints>
-${thresholdXML('right',false)}    </TonePoints>
-    <!-- SOL KULAK -->
-    <AudMeasurementConditions>
-      <StimulusSignalType>Pure tone</StimulusSignalType>
-      <MaskingSignalType>Narrow Band</MaskingSignalType>
-      <StimulusSignalOutput>Left</StimulusSignalOutput>
-      <MaskingSignalOutput>None</MaskingSignalOutput>
-      <StimulusdBWeighting>HL</StimulusdBWeighting>
-      <MaskingdBWeighting>HL</MaskingdBWeighting>
-      <StimulusPresentationType>Air</StimulusPresentationType>
-      <MaskingPresentationType>None</MaskingPresentationType>
-    </AudMeasurementConditions>
-    <TonePoints>
-${thresholdXML('left',false)}    </TonePoints>
-  </ToneThresholdAudiogram>
-  ${STATE.speech.srt.right||STATE.speech.srt.left?`
-  <SpeechReceptionThresholdAudiogram>
-    ${STATE.speech.srt.right!==null?`<SpeechScorePoint><Decibel>${STATE.speech.srt.right}</Decibel><Percentage>50</Percentage><AudMeasurementConditions><StimulusSignalOutput>Right</StimulusSignalOutput><StimulusdBWeighting>HL</StimulusdBWeighting><MaskingdBWeighting>HL</MaskingdBWeighting><SpeechThresholdType>SRT</SpeechThresholdType></AudMeasurementConditions></SpeechScorePoint>`:''}
-    ${STATE.speech.srt.left!==null?`<SpeechScorePoint><Decibel>${STATE.speech.srt.left}</Decibel><Percentage>50</Percentage><AudMeasurementConditions><StimulusSignalOutput>Left</StimulusSignalOutput><StimulusdBWeighting>HL</StimulusdBWeighting><MaskingdBWeighting>HL</MaskingdBWeighting><SpeechThresholdType>SRT</SpeechThresholdType></AudMeasurementConditions></SpeechScorePoint>`:''}
-  </SpeechReceptionThresholdAudiogram>`:''}
-</HIMSAAudiometricStandard>`;
+  function uclPointsXML(ear) {
+    const side = ear === 'right' ? 'Right' : 'Left';
+    let pts = '';
+    ALL_FREQS.forEach(f => {
+      const db = STATE.ucl[ear][f];
+      if(db === null) return;
+      pts += `        <TonePoint>
+          <Frequency>${f}</Frequency>
+          <Decibel>${db}</Decibel>
+          <MeasurementConditions>
+            <StimulusSignalType>Pure tone</StimulusSignalType>
+            <MaskingSignalType>None</MaskingSignalType>
+            <StimulusSignalOutput>${side}</StimulusSignalOutput>
+            <MaskingSignalOutput>None</MaskingSignalOutput>
+            <StimulusdBWeighting>HL</StimulusdBWeighting>
+            <MaskingdBWeighting>HL</MaskingdBWeighting>
+            <StimulusPresentationType>Air</StimulusPresentationType>
+            <MaskingPresentationType>None</MaskingPresentationType>
+          </MeasurementConditions>
+        </TonePoint>\n`;
+    });
+    return pts;
+  }
 
-  const blob=new Blob([xml],{type:'text/xml'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`${p.lastName}_${p.firstName}_${new Date().toISOString().slice(0,10)}.xml`;
+  function speechScoreXML(ear) {
+    const side = ear === 'right' ? 'Right' : 'Left';
+    const srt = STATE.speech.srt[ear];
+    const score = STATE.speech.scores[ear];
+    let xml = '';
+    if(srt !== null) {
+      xml += `      <SpeechScorePoint>
+        <Decibel>${srt}</Decibel>
+        <Percentage>50</Percentage>
+        <AudMeasurementConditions>
+          <StimulusSignalOutput>${side}</StimulusSignalOutput>
+          <StimulusdBWeighting>HL</StimulusdBWeighting>
+          <MaskingdBWeighting>HL</MaskingdBWeighting>
+          <SpeechThresholdType>SRT</SpeechThresholdType>
+        </AudMeasurementConditions>
+      </SpeechScorePoint>\n`;
+    }
+    if(score) {
+      xml += `      <SpeechScorePoint>
+        <Decibel>${score.db}</Decibel>
+        <Percentage>${score.pct}</Percentage>
+        <AudMeasurementConditions>
+          <StimulusSignalOutput>${side}</StimulusSignalOutput>
+          <StimulusdBWeighting>HL</StimulusdBWeighting>
+          <MaskingdBWeighting>HL</MaskingdBWeighting>
+          <SpeechThresholdType>WordRecognition</SpeechThresholdType>
+        </AudMeasurementConditions>
+      </SpeechScorePoint>\n`;
+    }
+    return xml;
+  }
+
+  const hasSpeech = STATE.speech.srt.right || STATE.speech.srt.left ||
+                    STATE.speech.scores.right || STATE.speech.scores.left;
+  const hasUCL = Object.values(STATE.ucl.right).some(v=>v!==null) ||
+                 Object.values(STATE.ucl.left).some(v=>v!==null);
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Algı İşitme Profesyonel Odyometri
+  HIMSA Audiogram Data Standard Format 500
+  Noah 4 uyumlu — File > Import Patients ile içe aktarın
+  Oluşturma: ${now}
+-->
+<HIMSAPatientAudiogram xmlns:aud="http://www.himsa.com/Measurement/Audiogram"
+                        xmlns:pat="http://www.himsa.com/Patient">
+
+  <!-- HASTA BİLGİLERİ -->
+  <pat:Patient>
+    <pat:FirstName>${p.firstName}</pat:FirstName>
+    <pat:LastName>${p.lastName}</pat:LastName>
+    ${dob ? `<pat:DateOfBirth>${dob}</pat:DateOfBirth>` : ''}
+    <pat:Gender>${gender}</pat:Gender>
+    ${p.id ? `<pat:ExternalPatientId>${p.id}</pat:ExternalPatientId>` : ''}
+    ${p.complaint ? `<pat:ChiefComplaint>${p.complaint}</pat:ChiefComplaint>` : ''}
+  </pat:Patient>
+
+  <!-- TEST OTURUMU -->
+  <Session>
+    <SessionDate>${testDate}</SessionDate>
+    <ExaminerName>${p.examiner || 'Algı İşitme'}</ExaminerName>
+    <ApplicationName>Algı İşitme Profesyonel Odyometri</ApplicationName>
+
+    <!-- SAF SES EŞİK ODYOMETRİSİ -->
+    <aud:HIMSAAudiometricStandard Version="500">
+
+      <!-- SAĞ KULAK — HAVA YOLU -->
+      <aud:ToneThresholdAudiogram>
+        <aud:AudMeasurementConditions>
+          <aud:StimulusSignalOutput>Right</aud:StimulusSignalOutput>
+          <aud:MaskingSignalOutput>None</aud:MaskingSignalOutput>
+          <aud:StimulusdBWeighting>HL</aud:StimulusdBWeighting>
+          <aud:MaskingdBWeighting>HL</aud:MaskingdBWeighting>
+          <aud:StimulusPresentationType>Air</aud:StimulusPresentationType>
+          <aud:MaskingPresentationType>None</aud:MaskingPresentationType>
+        </aud:AudMeasurementConditions>
+        <aud:TonePoints>
+${tonePointsXML('right',false)}        </aud:TonePoints>
+      </aud:ToneThresholdAudiogram>
+
+      <!-- SOL KULAK — HAVA YOLU -->
+      <aud:ToneThresholdAudiogram>
+        <aud:AudMeasurementConditions>
+          <aud:StimulusSignalOutput>Left</aud:StimulusSignalOutput>
+          <aud:MaskingSignalOutput>None</aud:MaskingSignalOutput>
+          <aud:StimulusdBWeighting>HL</aud:StimulusdBWeighting>
+          <aud:MaskingdBWeighting>HL</aud:MaskingdBWeighting>
+          <aud:StimulusPresentationType>Air</aud:StimulusPresentationType>
+          <aud:MaskingPresentationType>None</aud:MaskingPresentationType>
+        </aud:AudMeasurementConditions>
+        <aud:TonePoints>
+${tonePointsXML('left',false)}        </aud:TonePoints>
+      </aud:ToneThresholdAudiogram>
+
+      <!-- SAĞ KULAK — MASKELENMİŞ -->
+      <aud:ToneThresholdAudiogram>
+        <aud:AudMeasurementConditions>
+          <aud:StimulusSignalOutput>Right</aud:StimulusSignalOutput>
+          <aud:MaskingSignalOutput>Contralateral</aud:MaskingSignalOutput>
+          <aud:StimulusdBWeighting>HL</aud:StimulusdBWeighting>
+          <aud:MaskingdBWeighting>HL</aud:MaskingdBWeighting>
+          <aud:StimulusPresentationType>Air</aud:StimulusPresentationType>
+          <aud:MaskingPresentationType>Air</aud:MaskingPresentationType>
+        </aud:AudMeasurementConditions>
+        <aud:TonePoints>
+${tonePointsXML('right',true)}        </aud:TonePoints>
+      </aud:ToneThresholdAudiogram>
+
+      <!-- SOL KULAK — MASKELENMİŞ -->
+      <aud:ToneThresholdAudiogram>
+        <aud:AudMeasurementConditions>
+          <aud:StimulusSignalOutput>Left</aud:StimulusSignalOutput>
+          <aud:MaskingSignalOutput>Contralateral</aud:MaskingSignalOutput>
+          <aud:StimulusdBWeighting>HL</aud:StimulusdBWeighting>
+          <aud:MaskingdBWeighting>HL</aud:MaskingdBWeighting>
+          <aud:StimulusPresentationType>Air</aud:StimulusPresentationType>
+          <aud:MaskingPresentationType>Air</aud:MaskingPresentationType>
+        </aud:AudMeasurementConditions>
+        <aud:TonePoints>
+${tonePointsXML('left',true)}        </aud:TonePoints>
+      </aud:ToneThresholdAudiogram>
+
+      ${hasUCL ? `<!-- UCL (RAHATSIZLIK EŞİĞİ) -->
+      <aud:UncomfortableLoudnessAudiogram>
+        <aud:AudMeasurementConditions>
+          <aud:StimulusSignalOutput>Right</aud:StimulusSignalOutput>
+          <aud:StimulusdBWeighting>HL</aud:StimulusdBWeighting>
+          <aud:StimulusPresentationType>Air</aud:StimulusPresentationType>
+        </aud:AudMeasurementConditions>
+        <aud:TonePoints>
+${uclPointsXML('right')}        </aud:TonePoints>
+      </aud:UncomfortableLoudnessAudiogram>
+      <aud:UncomfortableLoudnessAudiogram>
+        <aud:AudMeasurementConditions>
+          <aud:StimulusSignalOutput>Left</aud:StimulusSignalOutput>
+          <aud:StimulusdBWeighting>HL</aud:StimulusdBWeighting>
+          <aud:StimulusPresentationType>Air</aud:StimulusPresentationType>
+        </aud:AudMeasurementConditions>
+        <aud:TonePoints>
+${uclPointsXML('left')}        </aud:TonePoints>
+      </aud:UncomfortableLoudnessAudiogram>` : ''}
+
+      ${hasSpeech ? `<!-- KONUŞMA TESTİ -->
+      <aud:SpeechAudiogram>
+        <aud:SpeechScorePoints>
+${speechScoreXML('right')}${speechScoreXML('left')}        </aud:SpeechScorePoints>
+      </aud:SpeechAudiogram>` : ''}
+
+    </aud:HIMSAAudiometricStandard>
+  </Session>
+
+</HIMSAPatientAudiogram>`;
+
+  const blob = new Blob([xml], {type:'text/xml;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${p.lastName}_${p.firstName}_${new Date().toISOString().slice(0,10)}_Noah.xml`;
   a.click();
-  showToast('HIMSA XML indirildi','success');
+  showToast('Noah uyumlu XML indirildi', 'success');
 }
 
-function printReport(){ window.print(); }
+function printReport() {
+  if(!STATE.patient){ showToast('Önce hasta kaydı yapın','error'); return; }
+  const p = STATE.patient;
+  const now = new Date().toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'});
+  const examTime = new Date(p.date).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+
+  // Odyogram SVG'sini al
+  const svgEl = document.getElementById('audiogramSvg');
+  const svgData = svgEl ? svgEl.outerHTML : '';
+
+  // PTA hesapla
+  function pta(ear) {
+    const fs = [500,1000,2000,4000];
+    const vs = fs.map(f=>STATE.thresholds[ear][f]).filter(v=>v!==null);
+    if(!vs.length) return null;
+    return Math.round(vs.reduce((a,b)=>a+b,0)/vs.length);
+  }
+  const ptaR = pta('right'), ptaL = pta('left');
+
+  function grade(db) {
+    if(db===null) return '—';
+    if(db<=20) return 'Normal';
+    if(db<=40) return 'Hafif Kayıp';
+    if(db<=55) return 'Orta Kayıp';
+    if(db<=70) return 'Orta-İleri';
+    if(db<=90) return 'İleri Kayıp';
+    return 'Çok İleri';
+  }
+
+  // Eşik tablosu
+  const DISP_FREQS = [125,250,500,1000,2000,3000,4000,6000,8000];
+  function thRow(ear) {
+    const color = ear==='right' ? '#C41E3A' : '#1565a0';
+    const label = ear==='right' ? 'Sağ (O)' : 'Sol (X)';
+    return `<tr>
+      <td style="font-weight:700;color:${color};padding:6px 10px">${label}</td>
+      ${DISP_FREQS.map(f => {
+        const v = STATE.thresholds[ear][f];
+        const nr = STATE.noResponse[ear][f];
+        const m = STATE.maskedThresholds[ear][f];
+        let cell = nr ? '<span style="color:#b45309">NR</span>' : (v!==null ? v : '—');
+        if(m!==null) cell += `<sup style="color:#b45309;font-size:9px"> M${m}</sup>`;
+        return `<td style="text-align:center;padding:6px 8px;font-weight:600;color:${color}">${cell}</td>`;
+      }).join('')}
+    </tr>`;
+  }
+
+  // Konuşma testi
+  function speechRow(ear) {
+    const srt = STATE.speech.srt[ear];
+    const sc = STATE.speech.scores[ear];
+    if(!srt && !sc) return '';
+    const label = ear==='right' ? 'Sağ' : 'Sol';
+    const color = ear==='right' ? '#C41E3A' : '#1565a0';
+    return `<tr>
+      <td style="font-weight:700;color:${color};padding:6px 10px">${label}</td>
+      <td style="padding:6px 8px;text-align:center">${srt !== null ? srt+' dB' : '—'}</td>
+      <td style="padding:6px 8px;text-align:center">${sc ? '%'+sc.pct+' ('+sc.correct+'/25)' : '—'}</td>
+      <td style="padding:6px 8px;text-align:center">${sc ? sc.db+' dB' : '—'}</td>
+    </tr>`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Odyoloji Raporu — ${p.lastName} ${p.firstName}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=DM+Serif+Display&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Plus Jakarta Sans',sans-serif; color:#1a1a2e; background:#fff; font-size:13px; }
+  @page { size:A4; margin:15mm 15mm 20mm 15mm; }
+  @media print {
+    body { font-size:11px; }
+    .no-print { display:none; }
+    .page-break { page-break-before:always; }
+  }
+
+  /* HEADER */
+  .header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:12px; border-bottom:3px solid #C41E3A; margin-bottom:16px; }
+  .clinic-name { font-family:'DM Serif Display',serif; font-size:22px; color:#1a1a2e; }
+  .clinic-sub { font-size:10px; color:#888; letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+  .report-title { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#C41E3A; text-align:right; }
+  .report-date { font-size:12px; color:#666; text-align:right; margin-top:4px; }
+
+  /* HASTA BİLGİLERİ */
+  .patient-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; background:#f8f8fb; border-radius:8px; padding:12px 16px; margin-bottom:14px; }
+  .patient-item label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#888; display:block; margin-bottom:2px; }
+  .patient-item span { font-size:13px; font-weight:700; color:#1a1a2e; }
+
+  /* PTA KUTULARI */
+  .pta-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .pta-box { border-radius:8px; padding:12px 16px; }
+  .pta-box.right { border:2px solid #C41E3A; background:#fff5f5; }
+  .pta-box.left { border:2px solid #1565a0; background:#e8f4fd; }
+  .pta-label { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  .pta-label.right { color:#C41E3A; }
+  .pta-label.left { color:#1565a0; }
+  .pta-val { font-family:'DM Serif Display',serif; font-size:36px; line-height:1; margin:4px 0 2px; }
+  .pta-val.right { color:#C41E3A; }
+  .pta-val.left { color:#1565a0; }
+  .pta-grade { font-size:12px; font-weight:700; color:#444; }
+
+  /* ODYOGRAFİ */
+  .section-title { font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#888; margin-bottom:6px; border-left:3px solid #C41E3A; padding-left:8px; }
+  .audiogram-wrap { border:1px solid #e0e0e8; border-radius:8px; padding:8px; margin-bottom:14px; background:#fafafa; }
+  .audiogram-wrap svg { width:100%; height:auto; display:block; }
+
+  /* TABLO */
+  table { width:100%; border-collapse:collapse; margin-bottom:14px; }
+  th { background:#1a1a2e; color:#fff; padding:7px 8px; font-size:10px; font-weight:700; letter-spacing:.5px; text-align:center; }
+  th:first-child { text-align:left; padding-left:10px; }
+  tr:nth-child(even) { background:#f8f8fb; }
+  td { border-bottom:1px solid #eee; }
+
+  /* KONUŞMA TESTİ */
+  .speech-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .speech-box { border:1px solid #e0e0e8; border-radius:8px; padding:12px; }
+  .speech-ear { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+  .speech-item { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #f0f0f0; font-size:12px; }
+  .speech-item:last-child { border:none; }
+  .speech-item .val { font-weight:700; }
+
+  /* FOOTER */
+  .footer { margin-top:16px; padding-top:10px; border-top:1px solid #e0e0e8; display:flex; justify-content:space-between; font-size:10px; color:#888; }
+
+  /* PRINT BUTTON */
+  .print-btn { position:fixed; top:16px; right:16px; background:#C41E3A; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; z-index:999; }
+  .print-btn:hover { background:#9e1830; }
+
+  /* Legend */
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:10px; color:#666; margin-bottom:8px; }
+  .legend-item { display:flex; align-items:center; gap:4px; }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ PDF Olarak Kaydet</button>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="clinic-name">Algı İşitme</div>
+    <div class="clinic-sub">Şişli · İstanbul · 0212 219 50 11</div>
+  </div>
+  <div>
+    <div class="report-title">Odyoloji Değerlendirme Raporu</div>
+    <div class="report-date">${now} · ${examTime}</div>
+    ${p.examiner ? `<div style="font-size:11px;color:#666;text-align:right;margin-top:2px">Uygulayan: ${p.examiner}</div>` : ''}
+  </div>
+</div>
+
+<!-- HASTA -->
+<div class="patient-grid">
+  <div class="patient-item"><label>Ad Soyad</label><span>${p.firstName} ${p.lastName}</span></div>
+  <div class="patient-item"><label>Doğum Tarihi</label><span>${p.dob || '—'}</span></div>
+  <div class="patient-item"><label>Cinsiyet</label><span>${p.gender==='M'?'Erkek':p.gender==='F'?'Kadın':'—'}</span></div>
+  <div class="patient-item"><label>TC / ID</label><span>${p.id || '—'}</span></div>
+  ${p.complaint ? `<div class="patient-item" style="grid-column:span 4"><label>Şikayet</label><span style="font-weight:400">${p.complaint}</span></div>` : ''}
+</div>
+
+<!-- PTA -->
+<div class="pta-row">
+  <div class="pta-box right">
+    <div class="pta-label right">👂 Sağ Kulak — PTA</div>
+    <div class="pta-val right">${ptaR !== null ? ptaR+' dB' : '—'}</div>
+    <div class="pta-grade">${grade(ptaR)}</div>
+    ${STATE.speech.srt.right !== null ? `<div style="font-size:11px;color:#666;margin-top:4px">SRT: <strong>${STATE.speech.srt.right} dB</strong></div>` : ''}
+  </div>
+  <div class="pta-box left">
+    <div class="pta-label left">👂 Sol Kulak — PTA</div>
+    <div class="pta-val left">${ptaL !== null ? ptaL+' dB' : '—'}</div>
+    <div class="pta-grade">${grade(ptaL)}</div>
+    ${STATE.speech.srt.left !== null ? `<div style="font-size:11px;color:#666;margin-top:4px">SRT: <strong>${STATE.speech.srt.left} dB</strong></div>` : ''}
+  </div>
+</div>
+
+<!-- ODYOGRAFİ -->
+<div class="section-title">Saf Ses Odyogramı (Hava Yolu)</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#C41E3A;border:2px solid #C41E3A"></div>Sağ kulak (O)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1565a0;border:2px solid #1565a0"></div>Sol kulak (X)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b;border-radius:2px"></div>Sağ maskelenmiş</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#42a5f5;border-radius:2px"></div>Sol maskelenmiş</div>
+  <div class="legend-item"><span style="color:#b45309;font-weight:700;font-size:11px">↓ NR</span><span> = Cevap alınamadı</span></div>
+</div>
+<div class="audiogram-wrap">${svgData}</div>
+
+<!-- EŞİK TABLOSU -->
+<div class="section-title">Saf Ses Eşikleri (dB HL)</div>
+<table>
+  <thead>
+    <tr>
+      <th>Kulak</th>
+      ${DISP_FREQS.map(f=>`<th>${f>=1000?f/1000+'k':f} Hz</th>`).join('')}
+    </tr>
+  </thead>
+  <tbody>
+    ${thRow('right')}
+    ${thRow('left')}
+  </tbody>
+</table>
+
+<!-- KONUŞMA TESTİ -->
+${(STATE.speech.srt.right || STATE.speech.srt.left || STATE.speech.scores.right || STATE.speech.scores.left) ? `
+<div class="section-title">Konuşmayı Anlama Testi</div>
+<table>
+  <thead>
+    <tr>
+      <th>Kulak</th>
+      <th>SRT (dB HL)</th>
+      <th>Kelime Tanıma (%)</th>
+      <th>Test Düzeyi (dB)</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${speechRow('right')}
+    ${speechRow('left')}
+  </tbody>
+</table>` : ''}
+
+<!-- UCL -->
+${(Object.values(STATE.ucl.right).some(v=>v!==null) || Object.values(STATE.ucl.left).some(v=>v!==null)) ? `
+<div class="section-title">UCL — Rahatsızlık Eşiği (dB HL)</div>
+<table>
+  <thead>
+    <tr>
+      <th>Kulak</th>
+      ${DISP_FREQS.map(f=>`<th>${f>=1000?f/1000+'k':f} Hz</th>`).join('')}
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="font-weight:700;color:#C41E3A;padding:6px 10px">Sağ</td>
+      ${DISP_FREQS.map(f=>`<td style="text-align:center;padding:6px 8px">${STATE.ucl.right[f]??'—'}</td>`).join('')}
+    </tr>
+    <tr>
+      <td style="font-weight:700;color:#1565a0;padding:6px 10px">Sol</td>
+      ${DISP_FREQS.map(f=>`<td style="text-align:center;padding:6px 8px">${STATE.ucl.left[f]??'—'}</td>`).join('')}
+    </tr>
+  </tbody>
+</table>` : ''}
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Algı İşitme · Merkez Mah. Abide-i Hürriyet Cad. No:143 Şişli/İstanbul · 0212 219 50 11</span>
+  <span>Bu rapor Algı İşitme Profesyonel Odyometri sistemi tarafından oluşturulmuştur.</span>
+</div>
+
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
 
 // ════════════════════════════════════════════════════════════
 // YARDIMCI
