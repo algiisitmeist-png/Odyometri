@@ -115,7 +115,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   overflow-y:auto;overflow-x:hidden;
   height:100%;
 }
-.ctrl-section{padding:12px 16px;border-bottom:1px solid var(--border)}
+.ctrl-section{padding:8px 12px;border-bottom:1px solid var(--border)}
 .ctrl-section h3{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px}
 
 /* Kulak seçici */
@@ -159,37 +159,37 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
 /* dB kontrol */
 .db-display{
-  text-align:center;padding:10px 16px;background:var(--gray-light);
-  border-radius:10px;margin-bottom:10px;
+  text-align:center;padding:6px 12px;background:var(--gray-light);
+  border-radius:8px;margin-bottom:8px;
 }
-.db-num{font-family:'DM Serif Display',serif;font-size:52px;color:var(--gray);line-height:1}
+.db-num{font-family:'DM Serif Display',serif;font-size:40px;color:var(--gray);line-height:1}
 .db-unit{font-size:14px;color:var(--gray-mid);margin-top:2px}
 .db-stepper{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .db-btn{
   padding:16px;border-radius:10px;border:1.5px solid var(--border);
   background:#fff;cursor:pointer;font-size:22px;font-weight:700;
   color:var(--gray);transition:all .15s;text-align:center;
-  min-height:56px;display:flex;align-items:center;justify-content:center;
+  min-height:44px;display:flex;align-items:center;justify-content:center;
 }
 .db-btn:hover{background:var(--gray-light)}
 .db-btn:active{transform:scale(.95);background:var(--border)}
 .db-slider{width:100%;margin-top:12px;accent-color:var(--gray)}
 
 /* Ses kontrol */
-.play-section{padding:12px 16px}
+.play-section{padding:8px 12px}
 .play-big{
-  width:100%;padding:20px;border-radius:14px;border:none;
+  width:100%;padding:13px;border-radius:10px;border:none;
   background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  margin-bottom:10px;
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:8px;
 }
 .play-big:hover{background:#2d2d4a;box-shadow:0 6px 20px rgba(26,26,46,.3)}
 .play-big.playing{background:var(--red)}
 .play-big.playing:hover{background:var(--red-dark)}
 
 .save-btn{
-  width:100%;padding:17px;border-radius:12px;border:none;
+  width:100%;padding:12px;border-radius:10px;border:none;
   background:var(--success);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;
   font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;
   display:flex;align-items:center;justify-content:center;gap:8px;
@@ -406,28 +406,16 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   <!-- SOL PANEL -->
   <div class="ctrl-panel">
 
-    <!-- Kulak seçimi -->
+    <!-- Kulak + Uyaran tek bölüm -->
     <div class="ctrl-section">
-      <h3>Kulak</h3>
-      <div class="ear-toggle">
-        <button class="ear-btn right active" onclick="setEar('right')">👂 Sağ (O)</button>
-        <button class="ear-btn left" onclick="setEar('left')">👂 Sol (X)</button>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="ear-btn right active" onclick="setEar('right')" style="flex:1">👂 Sağ</button>
+        <button class="ear-btn left" onclick="setEar('left')" style="flex:1">👂 Sol</button>
       </div>
-    </div>
-
-    <!-- Uyaran Tipi -->
-    <div class="ctrl-section">
-      <h3>Uyaran Tipi</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
-        <button class="stim-btn active" id="stimPure" onclick="setStimulus('pure')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;color:var(--gray-mid)">
-          Saf Ton
-        </button>
-        <button class="stim-btn" id="stimWarble" onclick="setStimulus('warble')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;color:var(--gray-mid)">
-          Warble
-        </button>
-        <button class="stim-btn" id="stimPulse" onclick="setStimulus('pulse')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;color:var(--gray-mid)">
-          Pulse
-        </button>
+        <button class="stim-btn active" id="stimPure" onclick="setStimulus('pure')" style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">Saf Ton</button>
+        <button class="stim-btn" id="stimWarble" onclick="setStimulus('warble')" style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">Warble</button>
+        <button class="stim-btn" id="stimPulse" onclick="setStimulus('pulse')" style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">Pulse</button>
       </div>
     </div>
 
@@ -435,20 +423,12 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
     <div class="ctrl-section">
       <h3>Test Modu</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
-        <button id="modeThreshold" onclick="setTestMode('threshold')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--gray);background:var(--gray);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:#fff">
-          Eşik (AC)
-        </button>
-        <button id="modeEHF" onclick="setTestMode('ehf')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">
-          Yüksek Frek.
-        </button>
-        <div style="position:relative;display:flex;flex-direction:column;gap:2px">
-          <button id="modeUCL" onclick="setTestMode('ucl')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">
-            UCL
-          </button>
-          <div style="text-align:center">
-            <span class="info-tooltip-wrap" style="justify-content:center">
-              <button class="info-btn" style="width:14px;height:14px;font-size:9px">i</button>
-              <div class="tooltip-popup" style="left:18px;top:-10px">
+        <button id="modeThreshold" onclick="setTestMode('threshold')" style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--gray);background:var(--gray);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:#fff">Eşik (AC)</button>
+        <button id="modeEHF" onclick="setTestMode('ehf')" style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">YF Ody.</button>
+        <span class="info-tooltip-wrap" style="display:flex">
+          <button id="modeUCL" onclick="setTestMode('ucl')" style="flex:1;padding:6px 2px;border-radius:6px 0 0 6px;border:1.5px solid var(--border);border-right:none;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;color:var(--gray-mid)">UCL</button>
+          <button class="info-btn" style="border-radius:0 6px 6px 0;width:18px;border-left:none">i</button>
+          <div class="tooltip-popup" style="left:18px;top:-10px">
                 <h4>⚠ UCL Testi <span style="font-size:10px;color:var(--gray-mid);font-weight:400">(Rahatsızlık Eşiği)</span></h4>
                 <div class="tp-section">
                   <div class="tp-title">Tanım</div>
@@ -474,9 +454,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
                   ⚠ <b>Dikkat:</b> UCL testi sırasında ses seviyesi yavaş yükseltilmeli, hasta ani yüksek sese maruz bırakılmamalıdır.
                 </div>
               </div>
-            </span>
-          </div>
-        </div>
+        </span>
       </div>
     </div>
 
@@ -528,7 +506,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
         <button class="db-btn" onclick="stepDb(+10)" style="font-size:15px">+10</button>
       </div>
       <input type="range" id="dbSlider" min="0" max="120" step="5" value="40"
-        oninput="setDb(+this.value)" style="width:100%;margin-top:12px;accent-color:var(--gray)">
+        oninput="setDb(+this.value)" style="width:100%;margin-top:8px;accent-color:var(--gray)">
     </div>
 
     <!-- Ses ve Kaydet -->
@@ -555,7 +533,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
     <!-- İşitme eğrisi durumu -->
     <div class="ctrl-section">
       <h3>Kaydedilen Eşikler</h3>
-      <div id="savedPoints" style="font-size:12px;color:var(--gray-mid);line-height:1.8"></div>
+      <div id="savedPoints" style="font-size:11px;color:var(--gray-mid);line-height:1.6"></div>
     </div>
 
   </div>
