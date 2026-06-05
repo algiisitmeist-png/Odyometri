@@ -829,6 +829,13 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
           <div style="font-size:11px;font-weight:700;color:#a5d6a7;text-align:center">Ölçüm Sol</div>
         </div>
         <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">125 Hz</div>
+          <div><input type="number" id="calRef_R_125" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_125" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_125" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_125" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#f8f8fb;border:1px solid var(--border);border-top:none;align-items:center">
           <div style="font-weight:800;font-size:15px;color:var(--gray)">250 Hz</div>
           <div><input type="number" id="calRef_R_250" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
           <div><input type="number" id="calRef_L_250" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
@@ -862,6 +869,13 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
           <div><input type="number" id="calRef_L_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
           <div><input type="number" id="calMeas_R_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
           <div><input type="number" id="calMeas_L_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">6k Hz</div>
+          <div><input type="number" id="calRef_R_6000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_6000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_6000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_6000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
         </div>
         <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#f8f8fb;border:1px solid var(--border);border-top:none;align-items:center">
           <div style="font-weight:800;font-size:15px;color:var(--gray)">8k Hz</div>
@@ -2991,7 +3005,7 @@ ${speechScoreXML('right')}${speechScoreXML('left')}        </aud:SpeechScorePoin
 let calibrationDiffs = {};
 
 function calcCalibration() {
-  const CAL_FREQS = [250,500,1000,2000,4000,8000];
+  const CAL_FREQS = [125,250,500,1000,2000,4000,6000,8000];
   calibrationDiffs = {};
   let html = '<table style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<tr style="background:var(--gray-light)"><th style="padding:5px 8px;text-align:left">Frekans</th><th style="padding:5px 8px;text-align:center">Sağ Fark</th><th style="padding:5px 8px;text-align:center">Sol Fark</th><th style="padding:5px 8px;text-align:center">Ortalama</th><th style="padding:5px 8px;text-align:center">Düzeltme</th></tr>';
@@ -3025,7 +3039,7 @@ function calcCalibration() {
 }
 
 function applyCalibration() {
-  const CAL_FREQS = [250,500,1000,2000,4000,8000];
+  const CAL_FREQS = [125,250,500,1000,2000,4000,6000,8000];
   if(Object.keys(calibrationDiffs).length === 0){showToast('Önce hesaplama yapın','error');return;}
   CAL_FREQS.forEach(f => {
     if(calibrationDiffs[f] === undefined) return;
