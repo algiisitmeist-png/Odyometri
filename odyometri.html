@@ -818,32 +818,63 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       <h2 style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--gray);margin-bottom:6px">Manuel Kulaklık Kalibrasyonu</h2>
       <p style="font-size:13px;color:var(--gray-mid);margin-bottom:24px">Referans odyogram eşiklerinizi girin. Kulaklığı takıp her frekans için sesi duyduğunuz eşiği ölçün. Sistem farkı hesaplayarak gain değerlerini otomatik ayarlar.</p>
 
-      <!-- Basit giriş: frekans bazlı referans ve ölçüm -->
-      <div style="margin-bottom:20px">
-        <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;gap:0;background:var(--gray);border-radius:8px 8px 0 0;overflow:hidden">
-          <div style="padding:8px;font-size:10px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase">Frekans</div>
-          <div style="padding:8px;font-size:10px;font-weight:700;color:#ff6b6b;text-align:center">Ref. Sağ</div>
-          <div style="padding:8px;font-size:10px;font-weight:700;color:#64b5f6;text-align:center">Ref. Sol</div>
-          <div style="padding:8px;font-size:10px;font-weight:700;color:#ffb74d;text-align:center">Ölçüm Sağ</div>
-          <div style="padding:8px;font-size:10px;font-weight:700;color:#81c784;text-align:center">Ölçüm Sol</div>
+      <!-- Kalibrasyon giriş tablosu -->
+      <div style="margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+        <!-- Header -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:var(--gray)">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase">Hz</div>
+          <div style="font-size:11px;font-weight:700;color:#ff8a80;text-align:center">Ref. Sağ</div>
+          <div style="font-size:11px;font-weight:700;color:#82b1ff;text-align:center">Ref. Sol</div>
+          <div style="font-size:11px;font-weight:700;color:#ffcc80;text-align:center">Ölçüm Sağ</div>
+          <div style="font-size:11px;font-weight:700;color:#a5d6a7;text-align:center">Ölçüm Sol</div>
         </div>
-        ${[250,500,1000,2000,4000,8000].map((f,i)=>`
-        <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;gap:0;background:${i%2?'var(--gray-light)':'#fff'};border:1px solid var(--border);border-top:none">
-          <div style="padding:8px 10px;font-weight:700;font-size:13px;display:flex;align-items:center">${f>=1000?f/1000+'k':f} Hz</div>
-          <div style="padding:6px"><input type="number" id="calRef_R_${f}" min="-10" max="80" step="5" value="" placeholder="dB"
-            style="width:100%;padding:6px;border:1.5px solid #ffcdd2;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--right-color);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
-          <div style="padding:6px"><input type="number" id="calRef_L_${f}" min="-10" max="80" step="5" value="" placeholder="dB"
-            style="width:100%;padding:6px;border:1.5px solid #bbdefb;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--left-color);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
-          <div style="padding:6px"><input type="number" id="calMeas_R_${f}" min="-10" max="120" step="5" value="" placeholder="dB"
-            style="width:100%;padding:6px;border:1.5px solid #ffe0b2;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--warning);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
-          <div style="padding:6px"><input type="number" id="calMeas_L_${f}" min="-10" max="120" step="5" value="" placeholder="dB"
-            style="width:100%;padding:6px;border:1.5px solid #c8e6c9;border-radius:6px;text-align:center;font-size:13px;font-weight:700;color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;outline:none"></div>
-        </div>`).join('')}
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">250 Hz</div>
+          <div><input type="number" id="calRef_R_250" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_250" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_250" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_250" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#f8f8fb;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">500 Hz</div>
+          <div><input type="number" id="calRef_R_500" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_500" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_500" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_500" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">1k Hz</div>
+          <div><input type="number" id="calRef_R_1000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_1000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_1000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_1000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#f8f8fb;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">2k Hz</div>
+          <div><input type="number" id="calRef_R_2000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_2000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_2000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_2000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">4k Hz</div>
+          <div><input type="number" id="calRef_R_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_4000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;background:#f8f8fb;border:1px solid var(--border);border-top:none;align-items:center">
+          <div style="font-weight:800;font-size:15px;color:var(--gray)">8k Hz</div>
+          <div><input type="number" id="calRef_R_8000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffcdd2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calRef_L_8000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #bbdefb;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_R_8000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #ffe0b2;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+          <div><input type="number" id="calMeas_L_8000" min="-10" max="120" step="5" placeholder="dB" style="width:100%;padding:8px 4px;border:2px solid #c8e6c9;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#fff"></div>
+        </div>
       </div>
 
       <div style="background:var(--blue-light);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--blue)">
-        💡 <b>Ref. Sağ/Sol:</b> Kalibrasyon cihazında ölçülen gerçek eşikleriniz &nbsp;|&nbsp;
-        <b>Ölçüm Sağ/Sol:</b> Bu kulaklıkla bu sistemde duyduğunuz eşikler
+        💡 <b>Ref. Sağ/Sol:</b> Kalibre cihazda ölçülen gerçek işitme eşikleriniz &nbsp;|&nbsp;
+        <b>Ölçüm Sağ/Sol:</b> Bu kulaklıkla bu uygulamada duyduğunuz eşikler
       </div>
       <!-- Fark analizi -->
       <div id="calDiffSection" style="background:var(--gray-light);border-radius:10px;padding:14px;margin-bottom:16px;display:none">
