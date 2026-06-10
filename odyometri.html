@@ -347,6 +347,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       <button class="nav-tab" id="tabAudio" onclick="showScreen('sAudiometry')" disabled>📊 Saf Ses</button>
       <button class="nav-tab" id="tabSpeech" onclick="showScreen('sSpeech')" disabled>🗣️ Konuşma</button>
       <button class="nav-tab" id="tabResult" onclick="showScreen('sResult')" disabled>📋 Sonuç</button>
+      <button class="nav-tab" id="tabTinnitus" onclick="showScreen('sTinnitus')" disabled>🔔 Tinnitometre</button>
       <button class="nav-tab" onclick="showScreen('sCalibration')">🎧 Kalibrasyon</button>
       <button class="nav-tab" onclick="showScreen('sSettings')">⚙️ Ayarlar</button>
     </div>
@@ -824,6 +825,321 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
   </div>
 </div>
 
+<!-- ═══ SCREEN: TİNNİTOMETRE ═══ -->
+<div class="screen" id="sTinnitus">
+  <div style="display:flex;height:100%;overflow:hidden">
+
+    <!-- SOL PANEL — Kontroller -->
+    <div style="width:300px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto">
+
+      <!-- Başlık -->
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--gray)">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px">Tinnitometre</div>
+        <div style="font-size:14px;font-weight:700;color:#fff">Tinnitus Değerlendirme</div>
+      </div>
+
+      <!-- Kulak -->
+      <div class="ctrl-section">
+        <h3>Kulak</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button id="tinEarR" onclick="setTinEar('right')"
+            style="padding:8px;border-radius:6px;border:2px solid var(--right-color);background:#fff5f5;color:var(--right-color);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+            ✓ 👂 Sağ
+          </button>
+          <button id="tinEarL" onclick="setTinEar('left')"
+            style="padding:8px;border-radius:6px;border:2px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+            👂 Sol
+          </button>
+        </div>
+      </div>
+
+      <!-- Frekans -->
+      <div class="ctrl-section">
+        <h3>Merkez Frekans</h3>
+        <div style="background:var(--gray-light);border-radius:8px;padding:10px;text-align:center;margin-bottom:8px">
+          <div style="font-family:'DM Serif Display',serif;font-size:36px;color:var(--gray);line-height:1" id="tinFreqDisplay">1000</div>
+          <div style="font-size:12px;color:var(--gray-mid)">Hz</div>
+        </div>
+        <input type="range" id="tinFreqSlider" min="0" max="39" step="1" value="14"
+          oninput="updateTinFreq(this.value)"
+          style="width:100%;accent-color:var(--gray);margin-bottom:6px">
+        <!-- Frekans ızgarası (hızlı seçim) -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px">
+          <button onclick="setTinFreqPreset(250)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">250</button>
+          <button onclick="setTinFreqPreset(500)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">500</button>
+          <button onclick="setTinFreqPreset(1000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">1k</button>
+          <button onclick="setTinFreqPreset(2000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">2k</button>
+          <button onclick="setTinFreqPreset(3000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">3k</button>
+          <button onclick="setTinFreqPreset(4000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">4k</button>
+          <button onclick="setTinFreqPreset(6000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">6k</button>
+          <button onclick="setTinFreqPreset(8000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">8k</button>
+          <button onclick="setTinFreqPreset(10000)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">10k</button>
+          <button onclick="setTinFreqPreset(12500)" style="padding:4px 2px;border-radius:4px;border:1px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;color:var(--gray-mid)">12.5k</button>
+        </div>
+      </div>
+
+      <!-- Bant Genişliği -->
+      <div class="ctrl-section">
+        <h3>Bant Genişliği</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px">
+          <button id="bwPure" onclick="setTinBW('pure')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--gray);background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">Saf Ton</button>
+          <button id="bwNarrow" onclick="setTinBW('narrow')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">Dar Bant</button>
+          <button id="bwWide" onclick="setTinBW('wide')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">Geniş Bant</button>
+          <button id="bwWhite" onclick="setTinBW('white')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">White Noise</button>
+        </div>
+        <!-- Bant genişliği slider (dar/geniş için) -->
+        <div id="bwSliderGroup" style="display:none">
+          <div style="font-size:11px;color:var(--gray-mid);margin-bottom:4px">Bant: ±<span id="bwValDisplay">200</span> Hz</div>
+          <input type="range" id="bwSlider" min="50" max="2000" step="50" value="200"
+            oninput="updateBWVal(this.value)"
+            style="width:100%;accent-color:var(--gray)">
+        </div>
+      </div>
+
+      <!-- Spektral Zarf -->
+      <div class="ctrl-section">
+        <h3>Spektral Zarf</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <button id="envFlat" onclick="setTinEnv('flat')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--gray);background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">
+            ▬ Düz
+          </button>
+          <button id="envGauss" onclick="setTinEnv('gaussian')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">
+            ∩ Çan
+          </button>
+          <button id="envRev" onclick="setTinEnv('reverse')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">
+            ∪ Ters
+          </button>
+        </div>
+      </div>
+
+      <!-- Modülasyon -->
+      <div class="ctrl-section">
+        <h3>Modülasyon</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px">
+          <button id="modNone" onclick="setTinMod('none')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--gray);background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">Sürekli</button>
+          <button id="modPulse" onclick="setTinMod('pulse')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">Pulse</button>
+          <button id="modAM" onclick="setTinMod('am')"
+            style="padding:6px 2px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--gray-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;cursor:pointer">AM</button>
+        </div>
+        <div id="modRateGroup" style="display:none">
+          <div style="font-size:11px;color:var(--gray-mid);margin-bottom:4px">Hız: <span id="modRateDisplay">4</span> Hz</div>
+          <input type="range" id="modRateSlider" min="0.5" max="20" step="0.5" value="4"
+            oninput="updateModRate(this.value)"
+            style="width:100%;accent-color:var(--gray)">
+        </div>
+      </div>
+
+      <!-- Şiddet -->
+      <div class="ctrl-section">
+        <h3>Şiddet (dB HL)</h3>
+        <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
+          <div style="font-family:'DM Serif Display',serif;font-size:36px;color:var(--gray);line-height:1" id="tinDbDisplay">40</div>
+          <div style="font-size:12px;color:var(--gray-mid)">dB HL</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <button onclick="stepTinDb(-5)" class="db-btn">−5</button>
+          <button onclick="stepTinDb(+5)" class="db-btn">+5</button>
+          <button onclick="stepTinDb(-1)" class="db-btn" style="font-size:14px">−1</button>
+          <button onclick="stepTinDb(+1)" class="db-btn" style="font-size:14px">+1</button>
+        </div>
+        <input type="range" id="tinDbSlider" min="0" max="80" step="1" value="40"
+          oninput="setTinDb(+this.value)"
+          style="width:100%;accent-color:var(--gray)">
+      </div>
+
+      <!-- Çal / Durdur -->
+      <div style="padding:10px 12px">
+        <button id="tinPlayBtn" onclick="toggleTinPlay()"
+          style="width:100%;padding:14px;border-radius:10px;border:none;background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">
+          ▶ Sesi Çal
+        </button>
+      </div>
+
+    </div>
+
+    <!-- SAĞ PANEL — Test aşamaları -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f0f0f6">
+
+      <!-- Aşama başlıkları -->
+      <div style="background:#fff;border-bottom:1px solid var(--border);padding:0;display:flex;flex-shrink:0">
+        <button id="tinTab0" onclick="setTinPhase(0)"
+          style="flex:1;padding:12px 8px;border:none;border-bottom:3px solid var(--gray);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--gray)">
+          1 · Pitch Matching
+        </button>
+        <button id="tinTab1" onclick="setTinPhase(1)"
+          style="flex:1;padding:12px 8px;border:none;border-bottom:3px solid transparent;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--gray-mid)">
+          2 · Loudness
+        </button>
+        <button id="tinTab2" onclick="setTinPhase(2)"
+          style="flex:1;padding:12px 8px;border:none;border-bottom:3px solid transparent;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--gray-mid)">
+          3 · MML
+        </button>
+        <button id="tinTab3" onclick="setTinPhase(3)"
+          style="flex:1;padding:12px 8px;border:none;border-bottom:3px solid transparent;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--gray-mid)">
+          4 · Residual Inhibition
+        </button>
+        <button id="tinTab4" onclick="setTinPhase(4)"
+          style="flex:1;padding:12px 8px;border:none;border-bottom:3px solid transparent;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--gray-mid)">
+          5 · Sonuç
+        </button>
+      </div>
+
+      <!-- Aşama içerikleri -->
+      <div style="flex:1;overflow-y:auto;padding:20px">
+
+        <!-- PHASE 0: Pitch Matching -->
+        <div id="tinPhase0" style="display:block">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--red);margin-bottom:8px">Pitch Matching — Frekans Eşleştirme</div>
+          <p style="font-size:13px;color:var(--gray-mid);margin-bottom:16px;line-height:1.7">
+            Hastaya talimat: <em>"Size farklı sesler çalacağım. Kulak çınlamanıza en yakın sesi söyleyin."</em><br>
+            Sol panelden frekansı ayarlayıp sesi çalın. Hasta onayladığında kaydedin.
+          </p>
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+              <div style="text-align:center">
+                <div style="font-size:11px;font-weight:700;color:var(--gray-mid);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Seçili Frekans</div>
+                <div style="font-family:'DM Serif Display',serif;font-size:48px;color:var(--gray)" id="tinPitchFreqBig">1000 Hz</div>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:12px;color:var(--gray-mid);margin-bottom:6px">Oktav karşılaştırma:</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap" id="tinOctaveRow"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button onclick="saveTinPitch()"
+              style="flex:1;padding:13px;border-radius:10px;border:none;background:var(--success);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+              ✓ Frekansı Kaydet
+            </button>
+            <div id="tinPitchSaved" style="display:flex;align-items:center;font-size:13px;font-weight:700;color:var(--success)"></div>
+          </div>
+        </div>
+
+        <!-- PHASE 1: Loudness Matching -->
+        <div id="tinPhase1" style="display:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--red);margin-bottom:8px">Loudness Matching — Şiddet Eşleştirme</div>
+          <p style="font-size:13px;color:var(--gray-mid);margin-bottom:16px;line-height:1.7">
+            Pitch Matching'de bulunan frekansta şiddeti ayarlayın.<br>
+            Hastaya: <em>"Ses kulak çınlamanızla aynı şiddette olduğunda söyleyin."</em>
+          </p>
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);margin-bottom:16px">
+            <div style="font-size:12px;color:var(--gray-mid);margin-bottom:8px">İşitme eşiğinden fark (SL):</div>
+            <div id="tinSLDisplay" style="font-family:'DM Serif Display',serif;font-size:40px;color:var(--gray)">— dB SL</div>
+            <div style="font-size:11px;color:var(--gray-mid);margin-top:4px">Normal tinnitus: 0-10 dB SL | Yüksek: &gt;10 dB SL</div>
+          </div>
+          <button onclick="saveTinLoudness()"
+            style="width:100%;padding:13px;border-radius:10px;border:none;background:var(--success);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+            ✓ Şiddeti Kaydet
+          </button>
+          <div id="tinLoudnessSaved" style="margin-top:8px;font-size:13px;font-weight:700;color:var(--success)"></div>
+        </div>
+
+        <!-- PHASE 2: MML -->
+        <div id="tinPhase2" style="display:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--red);margin-bottom:8px">Minimum Masking Level (MML)</div>
+          <p style="font-size:13px;color:var(--gray-mid);margin-bottom:16px;line-height:1.7">
+            White noise ile tinnitusu bastırmak için gereken en düşük seviye.<br>
+            Şiddeti yavaşça artırın. Hastaya: <em>"Çınlama kaybolduğunda söyleyin."</em>
+          </p>
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);margin-bottom:12px">
+            <div style="font-size:12px;color:var(--gray-mid);margin-bottom:4px">White noise seviyesi:</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:48px;color:var(--gray)" id="tinMMLDbBig">40 dB</div>
+            <div style="font-size:11px;color:var(--gray-mid);margin-top:4px">MML normal: işitme eşiği +10 dB civarı</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button onclick="startMMLNoise()" id="mmlNoiseBtn"
+              style="flex:1;padding:12px;border-radius:10px;border:2px solid var(--warning);background:var(--warning-light);color:var(--warning);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+              🔊 White Noise Başlat
+            </button>
+            <button onclick="stopMMLNoise()"
+              style="padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--gray-mid)">
+              ⏹
+            </button>
+          </div>
+          <button onclick="saveTinMML()"
+            style="width:100%;padding:13px;border-radius:10px;border:none;background:var(--success);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+            ✓ MML Kaydet
+          </button>
+          <div id="tinMMLSaved" style="margin-top:8px;font-size:13px;font-weight:700;color:var(--success)"></div>
+        </div>
+
+        <!-- PHASE 3: Residual Inhibition -->
+        <div id="tinPhase3" style="display:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--red);margin-bottom:8px">Residual Inhibition (RI)</div>
+          <p style="font-size:13px;color:var(--gray-mid);margin-bottom:16px;line-height:1.7">
+            MML + 10 dB seviyesinde 60 saniye broadband noise verilir.<br>
+            Sonrasında tinnitus ne kadar süre baskılanır kaydedilir.
+          </p>
+          <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="text-align:center;flex:1">
+                <div style="font-size:12px;color:var(--gray-mid);margin-bottom:4px">Kalan süre</div>
+                <div style="font-family:'DM Serif Display',serif;font-size:52px;color:var(--gray)" id="riTimerDisplay">60</div>
+                <div style="font-size:12px;color:var(--gray-mid)">saniye</div>
+              </div>
+              <div style="flex:1">
+                <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:8px">
+                  <div id="riTimerBar" style="height:100%;background:var(--red);width:100%;transition:width 1s linear;border-radius:4px"></div>
+                </div>
+                <div style="font-size:11px;color:var(--gray-mid)" id="riStatus">Hazır</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button onclick="startRI()" id="riStartBtn"
+              style="flex:1;padding:13px;border-radius:10px;border:none;background:var(--gray);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+              ▶ RI Testini Başlat (60s)
+            </button>
+          </div>
+          <div id="riAfterSection" style="display:none">
+            <p style="font-size:13px;color:var(--gray-mid);margin-bottom:12px">Ses bitti. Hasta tinnitusu duyuyor mu?</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+              <button onclick="saveRI('complete')"
+                style="padding:12px;border-radius:8px;border:2px solid var(--success);background:var(--success-light);color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+                ✓ Tam Baskılandı
+              </button>
+              <button onclick="saveRI('partial')"
+                style="padding:12px;border-radius:8px;border:2px solid var(--warning);background:var(--warning-light);color:var(--warning);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+                ~ Kısmen
+              </button>
+              <button onclick="saveRI('none')"
+                style="padding:12px;border-radius:8px;border:2px solid var(--red);background:var(--red-light);color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+                ✗ Baskılanmadı
+              </button>
+            </div>
+            <div style="font-size:12px;color:var(--gray-mid);margin-bottom:8px">Baskılanma süresi (saniye):</div>
+            <div style="display:flex;gap:8px">
+              <input type="number" id="riDurationInput" min="0" max="300" placeholder="sn"
+                style="width:100px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;outline:none">
+              <button onclick="saveRIDuration()"
+                style="padding:8px 16px;border-radius:8px;border:none;background:var(--success);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+                Kaydet
+              </button>
+            </div>
+          </div>
+          <div id="tinRISaved" style="margin-top:8px;font-size:13px;font-weight:700;color:var(--success)"></div>
+        </div>
+
+        <!-- PHASE 4: Sonuç -->
+        <div id="tinPhase4" style="display:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--red);margin-bottom:12px">Tinnitometre Sonuçları</div>
+          <div id="tinResultContent"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ SCREEN 5: KULAKLIK KALİBRASYONU ═══ -->
 <div class="screen" id="sCalibration">
   <div style="display:flex;align-items:center;justify-content:center;flex:1;background:var(--gray);padding:24px;overflow-y:auto">
@@ -1099,6 +1415,15 @@ let STATE = {
   testMode: 'threshold', // 'threshold' | 'ucl'
   pulseInterval: null,
   notes: '',
+  tinnitus: {
+    pitchFreq: null, pitchDb: null,
+    mml: null, ri: null,
+    bandwidth: 0,      // 0=saf ton, 1=dar, 2=geniş, 3=white
+    envelope: 'flat',  // flat|gaussian|reverse
+    modType: 'none',   // none|pulse|am
+    modRate: 4,        // Hz
+    results: {}
+  },
   // Kaydedilen eşikler
   thresholds: {
     right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
@@ -1492,7 +1817,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const map = {sPatient:0,sAudiometry:1,sSpeech:2,sResult:3,sCalibration:4,sSettings:5};
+  const map = {sPatient:0,sAudiometry:1,sSpeech:2,sResult:3,sTinnitus:4,sCalibration:5,sSettings:6};
   const tabs = document.querySelectorAll('.nav-tab');
   if(map[id] !== undefined) tabs[map[id]].classList.add('active');
   stopAll();
@@ -1538,7 +1863,7 @@ function startTest() {
   };
   document.getElementById('topPatient').innerHTML =
     `<strong>${first} ${last}</strong> · ${document.getElementById('pDob').value || '—'}`;
-  ['tabAudio','tabSpeech','tabResult'].forEach(id => {
+  ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
     document.getElementById(id).disabled = false;
   });
   showScreen('sAudiometry');
@@ -3062,6 +3387,433 @@ ${speechScoreXML('right')}${speechScoreXML('left')}        </aud:SpeechScorePoin
   a.click();
   showToast('Noah uyumlu XML indirildi', 'success');
 }
+
+
+// ════════════════════════════════════════════════════════════
+// TİNNİTOMETRE
+// ════════════════════════════════════════════════════════════
+
+// Tüm çalınabilir frekanslar (125Hz - 16kHz, log scale, 40 adım)
+const TIN_FREQS = (()=>{
+  const f = [];
+  for(let i=0;i<40;i++){
+    f.push(Math.round(125 * Math.pow(2, i * (7/39))));
+  }
+  return f;
+})();
+
+let tinState = {
+  ear: 'right',
+  freq: 1000,
+  db: 40,
+  bw: 'pure',      // pure|narrow|wide|white
+  bwHz: 200,       // bant ±Hz
+  envelope: 'flat', // flat|gaussian|reverse
+  mod: 'none',     // none|pulse|am
+  modRate: 4,
+  playing: false,
+  phase: 0,
+  // Web Audio nodes
+  ctx: null, nodes: [],
+  mmlNoise: null,
+  riInterval: null, riTimeout: null,
+};
+
+function getTinCtx() {
+  if(!tinState.ctx) tinState.ctx = new (window.AudioContext||window.webkitAudioContext)();
+  if(tinState.ctx.state==='suspended') tinState.ctx.resume();
+  return tinState.ctx;
+}
+
+// ── Frekans kontrolü ──
+function updateTinFreq(idx) {
+  tinState.freq = TIN_FREQS[Math.min(idx, TIN_FREQS.length-1)];
+  const f = tinState.freq;
+  document.getElementById('tinFreqDisplay').textContent = f>=1000?(f/1000).toFixed(f%1000?1:0)+'k':f;
+  document.getElementById('tinPitchFreqBig').textContent = (f>=1000?(f/1000).toFixed(f%1000?1:0)+'k':f)+' Hz';
+  buildOctaveRow();
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+function setTinFreqPreset(f) {
+  tinState.freq = f;
+  // Slider'ı en yakın indexe getir
+  let bestIdx=0, bestDiff=Infinity;
+  TIN_FREQS.forEach((tf,i)=>{ const d=Math.abs(tf-f); if(d<bestDiff){bestDiff=d;bestIdx=i;} });
+  document.getElementById('tinFreqSlider').value = bestIdx;
+  updateTinFreq(bestIdx);
+}
+
+function buildOctaveRow() {
+  const el = document.getElementById('tinOctaveRow');
+  if(!el) return;
+  const f = tinState.freq;
+  const octaves = [f/4, f/2, f, f*2, f*4].filter(x=>x>=125&&x<=16000);
+  el.innerHTML = octaves.map(ov=>`
+    <button onclick="setTinFreqPreset(${Math.round(ov)})"
+      style="padding:6px 10px;border-radius:6px;border:1.5px solid ${Math.round(ov)===f?'var(--gray)':'var(--border)'};
+      background:${Math.round(ov)===f?'var(--gray)':'#fff'};color:${Math.round(ov)===f?'#fff':'var(--gray-mid)'};
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">
+      ${Math.round(ov)>=1000?(Math.round(ov)/1000).toFixed(1)+'k':Math.round(ov)} Hz
+    </button>`).join('');
+}
+
+// ── dB kontrolü ──
+function stepTinDb(v) { setTinDb(Math.max(0,Math.min(80,tinState.db+v))); }
+function setTinDb(v) {
+  tinState.db = v;
+  document.getElementById('tinDbDisplay').textContent = v;
+  document.getElementById('tinDbSlider').value = v;
+  document.getElementById('tinMMLDbBig').textContent = v+' dB';
+  // SL hesapla
+  const ear = tinState.ear;
+  const th = STATE.thresholds[ear][tinState.freq] ?? STATE.thresholds[ear][1000] ?? 20;
+  const sl = v - th;
+  document.getElementById('tinSLDisplay').textContent = sl+' dB SL ('+v+' dB HL)';
+  if(tinState.playing) updateTinGain();
+}
+
+// ── Kulak ──
+function setTinEar(ear) {
+  tinState.ear = ear;
+  ['right','left'].forEach(e=>{
+    const btn = document.getElementById('tinEar'+(e==='right'?'R':'L'));
+    const active = e===ear;
+    btn.style.borderColor = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--border)';
+    btn.style.background = active?(e==='right'?'#fff5f5':'#e8f4fd'):'#fff';
+    btn.style.color = active?(e==='right'?'var(--right-color)':'var(--left-color)'):'var(--gray-mid)';
+    btn.textContent = (active?'✓ ':'')+'👂 '+(e==='right'?'Sağ':'Sol');
+  });
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+// ── Bant genişliği ──
+function setTinBW(bw) {
+  tinState.bw = bw;
+  ['pure','narrow','wide','white'].forEach(b=>{
+    const btn = document.getElementById('bw'+b.charAt(0).toUpperCase()+b.slice(1));
+    if(!btn) return;
+    const active = b===bw;
+    btn.style.background = active?'var(--gray)':'#fff';
+    btn.style.color = active?'#fff':'var(--gray-mid)';
+    btn.style.borderColor = active?'var(--gray)':'var(--border)';
+  });
+  document.getElementById('bwSliderGroup').style.display = (bw==='narrow'||bw==='wide')?'block':'none';
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+function updateBWVal(v) {
+  tinState.bwHz = +v;
+  document.getElementById('bwValDisplay').textContent = v;
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+// ── Spektral zarf ──
+function setTinEnv(env) {
+  tinState.envelope = env;
+  ['flat','gaussian','reverse'].forEach(e=>{
+    const btn = document.getElementById('env'+e.charAt(0).toUpperCase()+e.slice(1));
+    if(!btn) return;
+    const active = e===env;
+    btn.style.background = active?'var(--gray)':'#fff';
+    btn.style.color = active?'#fff':'var(--gray-mid)';
+    btn.style.borderColor = active?'var(--gray)':'var(--border)';
+  });
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+// ── Modülasyon ──
+function setTinMod(mod) {
+  tinState.mod = mod;
+  ['none','pulse','am'].forEach(m=>{
+    const btn = document.getElementById('mod'+(m==='none'?'None':m==='pulse'?'Pulse':'AM'));
+    if(!btn) return;
+    const active = m===mod;
+    btn.style.background = active?'var(--gray)':'#fff';
+    btn.style.color = active?'#fff':'var(--gray-mid)';
+    btn.style.borderColor = active?'var(--gray)':'var(--border)';
+  });
+  document.getElementById('modRateGroup').style.display = (mod!=='none')?'block':'none';
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+function updateModRate(v) {
+  tinState.modRate = +v;
+  document.getElementById('modRateDisplay').textContent = v;
+  if(tinState.playing) { stopTinPlay(); startTinPlay(); }
+}
+
+// ── Ses üretimi ──
+function startTinPlay() {
+  stopTinPlay();
+  const c = getTinCtx();
+  const pan = c.createStereoPanner();
+  pan.pan.value = tinState.ear==='right'?1:-1;
+  pan.connect(c.destination);
+  tinState.nodes = [pan];
+
+  const masterGain = c.createGain();
+  masterGain.gain.value = getGain(tinState.freq||1000, tinState.db);
+  masterGain.connect(pan);
+
+  if(tinState.bw==='white') {
+    // White noise
+    buildWhiteNoise(c, masterGain, tinState.envelope);
+  } else if(tinState.bw==='pure') {
+    buildTone(c, masterGain, tinState.freq, tinState.envelope);
+  } else {
+    // Narrow / Wide band — bant içinde çoklu osilatör
+    buildBandNoise(c, masterGain, tinState.freq, tinState.bwHz, tinState.envelope);
+  }
+
+  // Modülasyon uygula
+  applyModulation(c, masterGain);
+
+  tinState.playing = true;
+  const btn = document.getElementById('tinPlayBtn');
+  if(btn){ btn.style.background='var(--red)'; btn.textContent='⏹ Durdur'; }
+}
+
+function buildTone(ctx, dest, freq, env) {
+  const osc = ctx.createOscillator();
+  osc.type='sine'; osc.frequency.value=freq;
+  osc.connect(dest); osc.start();
+  tinState.nodes.push(osc);
+}
+
+function buildBandNoise(ctx, dest, centerFreq, bandHz, env) {
+  // Bant içinde 7 osilatör — spektral zarf şekline göre gain
+  const count = 7;
+  const step = (bandHz*2)/(count-1);
+  for(let i=0;i<count;i++){
+    const f = centerFreq - bandHz + i*step;
+    if(f<=0) continue;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type='sine'; osc.frequency.value=f;
+    // Zarf gain hesapla
+    const pos = (i/(count-1))*2-1; // -1 to 1
+    let envGain = 1;
+    if(env==='gaussian') envGain = Math.exp(-pos*pos*3);
+    else if(env==='reverse') envGain = 1-Math.exp(-pos*pos*3);
+    g.gain.value = envGain/count;
+    osc.connect(g); g.connect(dest); osc.start();
+    tinState.nodes.push(osc,g);
+  }
+}
+
+function buildWhiteNoise(ctx, dest, env) {
+  const bufSize = ctx.sampleRate*2;
+  const buf = ctx.createBuffer(1,bufSize,ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i]=Math.random()*2-1;
+  const src = ctx.createBufferSource();
+  src.buffer=buf; src.loop=true;
+  // Zarf için BandPass filtre
+  if(env!=='flat'){
+    const filt=ctx.createBiquadFilter();
+    filt.type='peaking';
+    filt.frequency.value=1000;
+    filt.gain.value = env==='gaussian'?6:-6;
+    src.connect(filt); filt.connect(dest); tinState.nodes.push(filt);
+  } else {
+    src.connect(dest);
+  }
+  src.start(); tinState.nodes.push(src);
+}
+
+function applyModulation(ctx, gainNode) {
+  if(tinState.mod==='none') return;
+  if(tinState.mod==='pulse') {
+    let on=true;
+    gainNode.gain.value = getGain(tinState.freq||1000, tinState.db);
+    const iv = setInterval(()=>{
+      on=!on;
+      if(gainNode) gainNode.gain.setTargetAtTime(on?getGain(tinState.freq||1000,tinState.db):0, ctx.currentTime, 0.01);
+    }, 1000/tinState.modRate/2);
+    tinState._modInterval=iv;
+  } else if(tinState.mod==='am') {
+    const lfo=ctx.createOscillator();
+    const lfoGain=ctx.createGain();
+    lfo.type='sine'; lfo.frequency.value=tinState.modRate;
+    lfoGain.gain.value=getGain(tinState.freq||1000,tinState.db)*0.5;
+    lfo.connect(lfoGain); lfoGain.connect(gainNode.gain);
+    lfo.start(); tinState.nodes.push(lfo,lfoGain);
+  }
+}
+
+function stopTinPlay() {
+  if(tinState._modInterval){ clearInterval(tinState._modInterval); tinState._modInterval=null; }
+  tinState.nodes.forEach(n=>{ try{if(n.stop)n.stop();n.disconnect();}catch(e){} });
+  tinState.nodes=[];
+  tinState.playing=false;
+  const btn=document.getElementById('tinPlayBtn');
+  if(btn){ btn.style.background='var(--gray)'; btn.textContent='▶ Sesi Çal'; }
+}
+
+function toggleTinPlay() {
+  if(tinState.playing) stopTinPlay(); else startTinPlay();
+}
+
+function updateTinGain() {
+  // Çalarken gain güncelle — yeni oluştur
+  stopTinPlay(); startTinPlay();
+}
+
+// ── Aşama navigasyonu ──
+function setTinPhase(p) {
+  tinState.phase=p;
+  for(let i=0;i<5;i++){
+    document.getElementById('tinPhase'+i).style.display=i===p?'block':'none';
+    const tab=document.getElementById('tinTab'+i);
+    tab.style.borderBottomColor=i===p?'var(--gray)':'transparent';
+    tab.style.color=i===p?'var(--gray)':'var(--gray-mid)';
+  }
+  if(p===4) buildTinResult();
+  buildOctaveRow();
+}
+
+// ── Kaydet fonksiyonları ──
+function saveTinPitch() {
+  STATE.tinnitus.pitchFreq = tinState.freq;
+  document.getElementById('tinPitchSaved').textContent = '✓ '+tinState.freq+' Hz kaydedildi';
+  showToast('Pitch: '+tinState.freq+' Hz','success');
+  setTimeout(()=>setTinPhase(1),800);
+}
+
+function saveTinLoudness() {
+  STATE.tinnitus.pitchDb = tinState.db;
+  document.getElementById('tinLoudnessSaved').textContent = '✓ '+tinState.db+' dB HL kaydedildi';
+  showToast('Loudness: '+tinState.db+' dB','success');
+  setTimeout(()=>setTinPhase(2),800);
+}
+
+// ── MML ──
+function startMMLNoise() {
+  stopTinPlay();
+  const c=getTinCtx();
+  const bufSize=c.sampleRate*2;
+  const buf=c.createBuffer(1,bufSize,c.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i]=Math.random()*2-1;
+  const src=c.createBufferSource(); src.buffer=buf; src.loop=true;
+  const g=c.createGain(); g.gain.value=getGain(1000,tinState.db)*0.5;
+  const pan=c.createStereoPanner(); pan.pan.value=tinState.ear==='right'?1:-1;
+  src.connect(g); g.connect(pan); pan.connect(c.destination);
+  src.start();
+  tinState.mmlNoise={src,g,pan};
+  tinState.nodes=[src,g,pan];
+  const btn=document.getElementById('mmlNoiseBtn');
+  if(btn){btn.style.background='var(--warning)';btn.style.color='#fff';btn.textContent='🔊 Çalıyor...';}
+}
+
+function stopMMLNoise() {
+  if(tinState.mmlNoise){
+    try{tinState.mmlNoise.src.stop();}catch(e){}
+    tinState.mmlNoise=null;
+  }
+  const btn=document.getElementById('mmlNoiseBtn');
+  if(btn){btn.style.background='var(--warning-light)';btn.style.color='var(--warning)';btn.textContent='🔊 White Noise Başlat';}
+}
+
+function saveTinMML() {
+  stopMMLNoise();
+  STATE.tinnitus.mml = tinState.db;
+  document.getElementById('tinMMLSaved').textContent = '✓ MML: '+tinState.db+' dB kaydedildi';
+  showToast('MML: '+tinState.db+' dB','success');
+  setTimeout(()=>setTinPhase(3),800);
+}
+
+// ── Residual Inhibition ──
+function startRI() {
+  const mml = STATE.tinnitus.mml||tinState.db;
+  const riLevel = mml+10;
+  // 60 sn broadband noise
+  const c=getTinCtx();
+  const bufSize=c.sampleRate*2;
+  const buf=c.createBuffer(1,bufSize,c.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i]=Math.random()*2-1;
+  const src=c.createBufferSource(); src.buffer=buf; src.loop=true;
+  const g=c.createGain(); g.gain.value=getGain(1000,riLevel)*0.5;
+  const pan=c.createStereoPanner(); pan.pan.value=tinState.ear==='right'?1:-1;
+  src.connect(g); g.connect(pan); pan.connect(c.destination);
+  src.start();
+  let remaining=60;
+  document.getElementById('riStatus').textContent='Broadband noise çalıyor — '+riLevel+' dB';
+  document.getElementById('riStartBtn').disabled=true;
+  document.getElementById('riStartBtn').style.opacity='.4';
+  tinState.riInterval=setInterval(()=>{
+    remaining--;
+    document.getElementById('riTimerDisplay').textContent=remaining;
+    document.getElementById('riTimerBar').style.width=(remaining/60*100)+'%';
+    if(remaining<=0){
+      clearInterval(tinState.riInterval);
+      try{src.stop();}catch(e){}
+      document.getElementById('riStatus').textContent='Ses bitti — hasta tinnitusu duyuyor mu?';
+      document.getElementById('riAfterSection').style.display='block';
+      document.getElementById('riTimerBar').style.background='var(--success)';
+    }
+  },1000);
+}
+
+function saveRI(result) {
+  STATE.tinnitus.ri = result;
+  document.getElementById('tinRISaved').textContent =
+    '✓ RI: '+(result==='complete'?'Tam baskılandı':result==='partial'?'Kısmen baskılandı':'Baskılanmadı');
+  showToast('RI kaydedildi','success');
+}
+
+function saveRIDuration() {
+  const d = document.getElementById('riDurationInput').value;
+  if(d) {
+    STATE.tinnitus.riDuration = +d;
+    document.getElementById('tinRISaved').textContent += ' — '+d+' sn';
+    showToast('RI süresi: '+d+' sn','success');
+    setTimeout(()=>setTinPhase(4),800);
+  }
+}
+
+// ── Sonuç ──
+function buildTinResult() {
+  const t = STATE.tinnitus;
+  const el = document.getElementById('tinResultContent');
+  if(!el) return;
+
+  const riText = t.ri==='complete'?'✓ Tam baskılandı':t.ri==='partial'?'~ Kısmen baskılandı':t.ri==='none'?'✗ Baskılanmadı':'—';
+  const riColor = t.ri==='complete'?'var(--success)':t.ri==='partial'?'var(--warning)':'var(--red)';
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:8px">Pitch Matching</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--gray)">${t.pitchFreq?((t.pitchFreq>=1000?t.pitchFreq/1000+'k':t.pitchFreq)+' Hz'):'—'}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:8px">Loudness</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--gray)">${t.pitchDb!==null?t.pitchDb+' dB HL':'—'}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:8px">MML</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--gray)">${t.mml!==null?t.mml+' dB':'—'}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:8px">Residual Inhibition</div>
+        <div style="font-size:18px;font-weight:700;color:${riColor};margin-bottom:4px">${riText}</div>
+        ${t.riDuration?`<div style="font-size:13px;color:var(--gray-mid)">Süre: ${t.riDuration} sn</div>`:''}
+      </div>
+    </div>
+    <div style="background:var(--gray-light);border-radius:10px;padding:14px;font-size:12px;color:var(--gray-mid);line-height:1.8">
+      <strong>Yorum:</strong><br>
+      ${t.pitchFreq?`• Tinnitus frekansı: ${t.pitchFreq>=1000?t.pitchFreq/1000+'k':t.pitchFreq} Hz<br>`:''}
+      ${t.pitchDb!==null?`• Şiddet: ${t.pitchDb} dB HL${STATE.thresholds[tinState.ear][t.pitchFreq]!==null?' ('+(t.pitchDb-STATE.thresholds[tinState.ear][t.pitchFreq])+' dB SL)':''}<br>`:''}
+      ${t.mml!==null?`• MML: ${t.mml} dB — ${t.mml<30?'Düşük (maskeleme kolay)':t.mml<60?'Orta':'Yüksek (maskeleme güç)'}<br>`:''}
+      ${t.ri?`• RI: ${riText}${t.riDuration?' ('+t.riDuration+' sn)':''}<br>`:''}
+    </div>`;
+}
+
+// Init
+window.addEventListener('load', ()=>{ buildOctaveRow(); });
 
 // ════════════════════════════════════════════════════════════
 // KULAKLIK KALİBRASYONU
