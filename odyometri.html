@@ -633,8 +633,9 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       </div>
     </div>
 
-    <!-- SONUÇLARA GİT BUTONU -->
-    <div style="padding:12px 20px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+    <!-- SONUÇLARA GİT BUTONU VE OTURUM KAYDET -->
+    <div style="padding:12px 20px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;flex-wrap:wrap">
+      <button onclick="saveAudiometrySession()" class="btn btn-sm" style="background:#00796b;color:#fff">💾 Saf Ses Oturumunu Kaydet</button>
       <button onclick="buildResult(); showScreen('sResult')" class="btn btn-sm" style="background:var(--red);color:#fff">📊 Sonuçları Gör →</button>
     </div>
   </div>
@@ -819,8 +820,9 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       </div>
     </div>
 
-    <!-- SONUÇLARA GİT BUTONU -->
-    <div style="padding:12px 20px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+    <!-- SONUÇLARA GİT BUTONU VE OTURUM KAYDET -->
+    <div style="padding:12px 20px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;flex-wrap:wrap">
+      <button onclick="saveSpeechSession()" class="btn btn-sm" style="background:#1976d2;color:#fff">💾 Konuşma Oturumunu Kaydet</button>
       <button onclick="buildResult(); showScreen('sResult')" class="btn btn-sm" style="background:var(--red);color:#fff">📊 Sonuçları Gör →</button>
     </div>
   </div>
@@ -1404,8 +1406,24 @@ function getGain(freqHz, dbHL) {
 // ════════════════════════════════════════════════════════════
 // DURUM
 // ════════════════════════════════════════════════════════════
+// Oturum veri yapısı
+function createSession() {
+  return {
+    id: Date.now().toString() + Math.random().toString(36).substr(2,9),
+    timestamp: new Date().toISOString(),
+    testData: {
+      audiometry: null, // Saf Ses testi
+      speech: null,     // Konuşma testi
+      tinnitus: null    // Tinnitometre
+    }
+  };
+}
+
 let STATE = {
   patient: null,
+  sessions: [],         // [{id, timestamp, testData: {audiometry, speech, tinnitus}}]
+  currentSessionId: null, // Aktif oturum
+
   ear: 'right',           // aktif kulak
   currentFreq: 1000,      // Hz
   currentDb: 40,          // dB HL
@@ -1865,6 +1883,13 @@ function startTest() {
     important: document.getElementById('pImportant').value,
     date: new Date().toISOString()
   };
+
+  // Yeni oturum oluştur
+  STATE.sessions = [];
+  const newSession = createSession();
+  STATE.sessions.push(newSession);
+  STATE.currentSessionId = newSession.id;
+
   document.getElementById('topPatient').innerHTML =
     `<strong>${first} ${last}</strong> · ${document.getElementById('pDob').value || '—'}`;
   ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
@@ -4185,6 +4210,16 @@ function loadPatientForTest(fbId) {
     important: p.important
   };
 
+  // Oturumları al ve STATE'e yükle (Firebase'den gelecek)
+  // Şimdilik yeni boş oturum oluştur
+  STATE.sessions = [];
+  const newSession = createSession();
+  STATE.sessions.push(newSession);
+  STATE.currentSessionId = newSession.id;
+
+  // Çalışma alanını temizle (son oturumun verilerine yazılıp yazılmadığını kontrol et)
+  resetWorkingState();
+
   // Test sekmelerini etkinleştir
   ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
     document.getElementById(id).disabled = false;
@@ -4196,7 +4231,34 @@ function loadPatientForTest(fbId) {
 
   // Test ekranına git
   showScreen('sAudiometry');
-  showToast(`✓ ${p.firstName} ${p.lastName} yüklendi`, 'success');
+  showToast(`✓ ${p.firstName} ${p.lastName} yüklendi — Yeni oturum başlatıldı`, 'success');
+}
+
+function resetWorkingState() {
+  // Çalışma alanındaki tüm test verilerini temizle
+  STATE.thresholds = {
+    right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
+    left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
+  };
+  STATE.maskedThresholds = {
+    right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
+    left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
+  };
+  STATE.noResponse = {
+    right: {125:false,250:false,500:false,1000:false,2000:false,3000:false,4000:false,6000:false,8000:false,9000:false,10000:false,11200:false,12500:false,14000:false,16000:false,18000:false,20000:false},
+    left:  {125:false,250:false,500:false,1000:false,2000:false,3000:false,4000:false,6000:false,8000:false,9000:false,10000:false,11200:false,12500:false,14000:false,16000:false,18000:false,20000:false}
+  };
+  STATE.ucl = {
+    right: {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null},
+    left:  {125:null,250:null,500:null,1000:null,2000:null,3000:null,4000:null,6000:null,8000:null,9000:null,10000:null,11200:null,12500:null,14000:null,16000:null,18000:null,20000:null}
+  };
+  STATE.notes = '';
+
+  // Konuşma testini sıfırla
+  STATE.speech.earState = {
+    right: { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null },
+    left:  { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null }
+  };
 }
 
 async function deletePatient(fbId) {
@@ -4210,6 +4272,67 @@ async function deletePatient(fbId) {
     console.error('Silme hatası:', e);
     showToast('Silme başarısız', 'error');
   }
+}
+
+// ════════════════════════════════════════════════════════════
+// OTURUM KAYDET
+// ════════════════════════════════════════════════════════════
+
+function saveAudiometrySession() {
+  if (!STATE.patient) {
+    showToast('Önce hasta kaydı yapın', 'error');
+    return;
+  }
+
+  // Yeni oturum oluştur veya mevcut oturuma ata
+  if (!STATE.currentSessionId) {
+    const session = createSession();
+    STATE.sessions.push(session);
+    STATE.currentSessionId = session.id;
+  }
+
+  // Saf Ses testini oturuma kaydet
+  const currentSession = STATE.sessions.find(s => s.id === STATE.currentSessionId);
+  if (!currentSession) return;
+
+  currentSession.testData.audiometry = {
+    timestamp: new Date().toISOString(),
+    thresholds: JSON.parse(JSON.stringify(STATE.thresholds)),
+    maskedThresholds: JSON.parse(JSON.stringify(STATE.maskedThresholds)),
+    noResponse: JSON.parse(JSON.stringify(STATE.noResponse)),
+    ucl: JSON.parse(JSON.stringify(STATE.ucl)),
+    notes: STATE.notes
+  };
+
+  showToast('✓ Saf Ses testi oturuma kaydedildi', 'success');
+  console.log('Audiometry session saved:', currentSession);
+}
+
+function saveSpeechSession() {
+  if (!STATE.patient) {
+    showToast('Önce hasta kaydı yapın', 'error');
+    return;
+  }
+
+  // Yeni oturum oluştur veya mevcut oturuma ata
+  if (!STATE.currentSessionId) {
+    const session = createSession();
+    STATE.sessions.push(session);
+    STATE.currentSessionId = session.id;
+  }
+
+  // Konuşma testini oturuma kaydet
+  const currentSession = STATE.sessions.find(s => s.id === STATE.currentSessionId);
+  if (!currentSession) return;
+
+  currentSession.testData.speech = {
+    timestamp: new Date().toISOString(),
+    earState: JSON.parse(JSON.stringify(STATE.speech.earState)),
+    scores: STATE.speech.scores
+  };
+
+  showToast('✓ Konuşma testi oturuma kaydedildi', 'success');
+  console.log('Speech session saved:', currentSession);
 }
 
 // ════════════════════════════════════════════════════════════
