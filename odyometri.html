@@ -4190,6 +4190,8 @@ async function loadPatientForTest(fbId) {
   const p = allPatients.find(x => x.fbId === fbId);
   if(!p) return;
 
+  console.log('📋 Patient loading:', p);
+
   // Hastayı form'a doldur
   document.getElementById('pFirstName').value = p.firstName;
   document.getElementById('pLastName').value = p.lastName;
@@ -4215,6 +4217,10 @@ async function loadPatientForTest(fbId) {
     important: p.important
   };
 
+  // Oturumları sıfırla
+  STATE.sessions = [];
+  STATE.currentSessionId = null;
+
   // Test sekmelerini etkinleştir
   ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
     document.getElementById(id).disabled = false;
@@ -4222,9 +4228,20 @@ async function loadPatientForTest(fbId) {
 
   // Hasta adını ve oturum dropdown'unu üstte göster
   document.getElementById('topPatient').innerHTML =
-    `<div style="display:flex;align-items:center;gap:8px"><strong>${p.firstName} ${p.lastName}</strong> · <span style="font-size:11px">${p.dob || '—'}</span></div>`;
+    `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+        <strong>${p.firstName} ${p.lastName}</strong> · <span style="font-size:11px">${p.dob || '—'}</span>
+      </div>
+      <select id="sessionSelector" onchange="switchSession(this.value)" style="display:none;padding:4px 8px;border-radius:4px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:11px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+        <option value="">Oturum Seç...</option>
+      </select>
+    </div>`;
+
+  // Çalışma alanını temizle
+  resetWorkingState();
 
   // Firebase'den oturumları yükle
+  console.log('🔄 Loading sessions from Firebase...');
   await loadPatientSessions();
 
   // Test ekranına git
@@ -4282,16 +4299,23 @@ function saveAudiometrySession() {
     return;
   }
 
+  console.log('💾 Saving audiometry session...');
+
   // Yeni oturum oluştur veya mevcut oturuma ata
   if (!STATE.currentSessionId) {
+    console.log('📝 Creating new session...');
     const session = createSession();
     STATE.sessions.push(session);
     STATE.currentSessionId = session.id;
+    console.log('✓ New session created:', session.id);
   }
 
   // Saf Ses testini oturuma kaydet
   const currentSession = STATE.sessions.find(s => s.id === STATE.currentSessionId);
-  if (!currentSession) return;
+  if (!currentSession) {
+    console.error('❌ Current session not found');
+    return;
+  }
 
   currentSession.testData.audiometry = {
     timestamp: new Date().toISOString(),
@@ -4302,8 +4326,12 @@ function saveAudiometrySession() {
     notes: STATE.notes
   };
 
+  console.log('✓ Audiometry data saved to session:', currentSession);
+
+  // Dropdown'u güncelle
+  updateSessionDropdown();
+
   showToast('✓ Saf Ses testi oturuma kaydedildi', 'success');
-  console.log('Audiometry session saved:', currentSession);
 }
 
 function saveSpeechSession() {
@@ -4312,16 +4340,23 @@ function saveSpeechSession() {
     return;
   }
 
+  console.log('💾 Saving speech session...');
+
   // Yeni oturum oluştur veya mevcut oturuma ata
   if (!STATE.currentSessionId) {
+    console.log('📝 Creating new session...');
     const session = createSession();
     STATE.sessions.push(session);
     STATE.currentSessionId = session.id;
+    console.log('✓ New session created:', session.id);
   }
 
   // Konuşma testini oturuma kaydet
   const currentSession = STATE.sessions.find(s => s.id === STATE.currentSessionId);
-  if (!currentSession) return;
+  if (!currentSession) {
+    console.error('❌ Current session not found');
+    return;
+  }
 
   currentSession.testData.speech = {
     timestamp: new Date().toISOString(),
@@ -4329,8 +4364,12 @@ function saveSpeechSession() {
     scores: STATE.speech.scores
   };
 
+  console.log('✓ Speech data saved to session:', currentSession);
+
+  // Dropdown'u güncelle
+  updateSessionDropdown();
+
   showToast('✓ Konuşma testi oturuma kaydedildi', 'success');
-  console.log('Speech session saved:', currentSession);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4338,50 +4377,98 @@ function saveSpeechSession() {
 // ════════════════════════════════════════════════════════════
 
 async function loadPatientSessions() {
-  if (!STATE.patient || !STATE.patient.fbId) return;
+  if (!STATE.patient || !STATE.patient.fbId) {
+    console.log('⚠️ No patient or fbId');
+    return;
+  }
 
-  const sessions = await window.loadPatientSessions(STATE.patient.fbId);
-  STATE.sessions = sessions;
+  console.log('📥 Loading sessions for fbId:', STATE.patient.fbId);
+  const firebaseSessions = await window.loadPatientSessions(STATE.patient.fbId);
+  console.log('📥 Firebase sessions loaded:', firebaseSessions);
 
-  // Dropdown'u doldur
+  // Firebase oturumlarını STATE'e ekle
+  STATE.sessions = firebaseSessions || [];
+  console.log('📊 STATE.sessions updated:', STATE.sessions);
+
+  // Dropdown'u güncelle
+  updateSessionDropdown();
+
+  // Son oturumu yükle
+  if (STATE.sessions.length > 0) {
+    const lastSession = STATE.sessions[0];
+    console.log('📌 Loading last session:', lastSession.id);
+    switchSession(lastSession.id);
+  } else {
+    console.log('ℹ️ No previous sessions found');
+  }
+}
+
+function updateSessionDropdown() {
   const selector = document.getElementById('sessionSelector');
-  if (selector && sessions.length > 0) {
+  if (!selector) {
+    console.log('⚠️ sessionSelector not found');
+    return;
+  }
+
+  console.log('🔄 Updating dropdown with', STATE.sessions.length, 'sessions');
+
+  if (STATE.sessions && STATE.sessions.length > 0) {
     selector.style.display = 'inline-block';
-    selector.innerHTML = '<option value="">Oturum Seç</option>' +
-      sessions.map(s => {
+    selector.innerHTML = '<option value="">Oturum Seç...</option>' +
+      STATE.sessions.map(s => {
         const date = new Date(s.timestamp);
         const dateStr = date.toLocaleDateString('tr-TR');
         const timeStr = date.toLocaleTimeString('tr-TR');
-        return `<option value="${s.id}">${dateStr} ${timeStr}</option>`;
+        const displayText = `${dateStr} ${timeStr}`;
+        console.log('  ✓ Session option:', s.id, '-', displayText);
+        return `<option value="${s.id}">${displayText}</option>`;
       }).join('');
-  }
-
-  // Son oturumu yükle
-  if (sessions.length > 0) {
-    const lastSession = sessions[0];
-    switchSession(lastSession.id);
+    console.log('✓ Dropdown populated');
+  } else {
+    selector.style.display = 'none';
+    selector.innerHTML = '<option value="">Oturum Seç...</option>';
+    console.log('ℹ️ Dropdown hidden (no sessions)');
   }
 }
 
 function switchSession(sessionId) {
-  if (!sessionId) return;
+  if (!sessionId) {
+    console.log('⚠️ No session ID provided');
+    return;
+  }
+
+  console.log('🔄 Switching to session:', sessionId);
 
   const session = STATE.sessions.find(s => s.id === sessionId);
-  if (!session) return;
+  if (!session) {
+    console.error('❌ Session not found:', sessionId);
+    console.log('Available sessions:', STATE.sessions.map(s => s.id));
+    return;
+  }
 
+  console.log('✓ Session found, loading data...');
   STATE.currentSessionId = sessionId;
 
   // Oturum verisini STATE'e yükle
   if (session.testData) {
-    STATE.thresholds = JSON.parse(JSON.stringify(session.testData.thresholds || {}));
-    STATE.maskedThresholds = JSON.parse(JSON.stringify(session.testData.maskedThresholds || {}));
-    STATE.noResponse = JSON.parse(JSON.stringify(session.testData.noResponse || {}));
-    STATE.ucl = JSON.parse(JSON.stringify(session.testData.ucl || {}));
-    STATE.notes = session.testData.notes || '';
-    STATE.speech.earState = JSON.parse(JSON.stringify(session.testData.earState || {
-      right: { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null },
-      left:  { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null }
-    }));
+    // Audiometry data
+    if (session.testData.audiometry) {
+      STATE.thresholds = JSON.parse(JSON.stringify(session.testData.audiometry.thresholds || {}));
+      STATE.maskedThresholds = JSON.parse(JSON.stringify(session.testData.audiometry.maskedThresholds || {}));
+      STATE.noResponse = JSON.parse(JSON.stringify(session.testData.audiometry.noResponse || {}));
+      STATE.ucl = JSON.parse(JSON.stringify(session.testData.audiometry.ucl || {}));
+      STATE.notes = session.testData.audiometry.notes || '';
+      console.log('✓ Audiometry data loaded');
+    }
+
+    // Speech data
+    if (session.testData.speech) {
+      STATE.speech.earState = JSON.parse(JSON.stringify(session.testData.speech.earState || {
+        right: { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null },
+        left:  { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null }
+      }));
+      console.log('✓ Speech data loaded');
+    }
   }
 
   showToast('✓ Oturum yüklendi', 'success');
@@ -4806,15 +4893,28 @@ window.loadPatientsFromFirebase = async function() {
 
 window.loadPatientSessions = async function(fbId) {
   try {
+    console.log('🔍 Querying Firebase sessions for fbId:', fbId);
     const q = query(collection(db, 'patients', fbId, 'sessions'), orderBy('timestamp', 'desc'));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({
-      id: d.id,
-      timestamp: d.data().timestamp?.toDate?.() || new Date(),
-      ...d.data()
-    }));
+
+    console.log('📊 Found', snap.docs.length, 'session(s) in Firebase');
+
+    const sessions = snap.docs.map(d => {
+      const data = d.data();
+      const timestamp = data.timestamp?.toDate?.() || new Date();
+      console.log('  📄 Session ID:', d.id, 'Timestamp:', timestamp);
+
+      return {
+        id: d.id,
+        timestamp: timestamp,
+        ...data
+      };
+    });
+
+    console.log('✓ Sessions loaded:', sessions.length);
+    return sessions;
   } catch(e) {
-    console.error('Session load error:', e);
+    console.error('❌ Session load error:', e);
     return [];
   }
 };
