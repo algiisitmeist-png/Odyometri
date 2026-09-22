@@ -826,6 +826,14 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       </div>
     </div>
     <div id="resultContent"></div>
+
+    <!-- KAYDET BUTONLARI -->
+    <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end;flex-wrap:wrap">
+      <button onclick="showScreen('sAudiometry')" class="btn btn-sm" style="background:var(--gray-light);color:var(--gray);border:none">← Teste Dön</button>
+      <button onclick="saveToFirebase()" id="fbSaveBtn" style="padding:12px 24px;border-radius:10px;border:none;background:#f57c00;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px">
+        ☁️ Firebase'e Kaydet
+      </button>
+    </div>
   </div>
 </div>
 
