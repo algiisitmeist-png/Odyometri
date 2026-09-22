@@ -335,7 +335,12 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
     <span class="topbar-title">İşitme Testi</span>
   </div>
   <div class="topbar-patient" id="topPatient">
-    <span>Hasta seçilmedi</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span>Hasta seçilmedi</span>
+      <select id="sessionSelector" onchange="switchSession(this.value)" style="display:none;padding:4px 8px;border-radius:4px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:11px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+        <option value="">Oturum Seç</option>
+      </select>
+    </div>
   </div>
   <div style="display:flex;align-items:center;gap:6px;margin-left:12px" id="noiseMeter">
     <span style="font-size:10px;color:rgba(255,255,255,.4)">🎤</span>
@@ -4181,7 +4186,7 @@ async function selectPatient(idx) {
   }
 }
 
-function loadPatientForTest(fbId) {
+async function loadPatientForTest(fbId) {
   const p = allPatients.find(x => x.fbId === fbId);
   if(!p) return;
 
@@ -4210,28 +4215,21 @@ function loadPatientForTest(fbId) {
     important: p.important
   };
 
-  // Oturumları al ve STATE'e yükle (Firebase'den gelecek)
-  // Şimdilik yeni boş oturum oluştur
-  STATE.sessions = [];
-  const newSession = createSession();
-  STATE.sessions.push(newSession);
-  STATE.currentSessionId = newSession.id;
-
-  // Çalışma alanını temizle (son oturumun verilerine yazılıp yazılmadığını kontrol et)
-  resetWorkingState();
-
   // Test sekmelerini etkinleştir
   ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
     document.getElementById(id).disabled = false;
   });
 
-  // Hasta adını üstte göster
+  // Hasta adını ve oturum dropdown'unu üstte göster
   document.getElementById('topPatient').innerHTML =
-    `<strong>${p.firstName} ${p.lastName}</strong> · ${p.dob || '—'}`;
+    `<div style="display:flex;align-items:center;gap:8px"><strong>${p.firstName} ${p.lastName}</strong> · <span style="font-size:11px">${p.dob || '—'}</span></div>`;
+
+  // Firebase'den oturumları yükle
+  await loadPatientSessions();
 
   // Test ekranına git
   showScreen('sAudiometry');
-  showToast(`✓ ${p.firstName} ${p.lastName} yüklendi — Yeni oturum başlatıldı`, 'success');
+  showToast(`✓ ${p.firstName} ${p.lastName} yüklendi`, 'success');
 }
 
 function resetWorkingState() {
@@ -4333,6 +4331,63 @@ function saveSpeechSession() {
 
   showToast('✓ Konuşma testi oturuma kaydedildi', 'success');
   console.log('Speech session saved:', currentSession);
+}
+
+// ════════════════════════════════════════════════════════════
+// OTURUM YÖNETİMİ
+// ════════════════════════════════════════════════════════════
+
+async function loadPatientSessions() {
+  if (!STATE.patient || !STATE.patient.fbId) return;
+
+  const sessions = await window.loadPatientSessions(STATE.patient.fbId);
+  STATE.sessions = sessions;
+
+  // Dropdown'u doldur
+  const selector = document.getElementById('sessionSelector');
+  if (selector && sessions.length > 0) {
+    selector.style.display = 'inline-block';
+    selector.innerHTML = '<option value="">Oturum Seç</option>' +
+      sessions.map(s => {
+        const date = new Date(s.timestamp);
+        const dateStr = date.toLocaleDateString('tr-TR');
+        const timeStr = date.toLocaleTimeString('tr-TR');
+        return `<option value="${s.id}">${dateStr} ${timeStr}</option>`;
+      }).join('');
+  }
+
+  // Son oturumu yükle
+  if (sessions.length > 0) {
+    const lastSession = sessions[0];
+    switchSession(lastSession.id);
+  }
+}
+
+function switchSession(sessionId) {
+  if (!sessionId) return;
+
+  const session = STATE.sessions.find(s => s.id === sessionId);
+  if (!session) return;
+
+  STATE.currentSessionId = sessionId;
+
+  // Oturum verisini STATE'e yükle
+  if (session.testData) {
+    STATE.thresholds = JSON.parse(JSON.stringify(session.testData.thresholds || {}));
+    STATE.maskedThresholds = JSON.parse(JSON.stringify(session.testData.maskedThresholds || {}));
+    STATE.noResponse = JSON.parse(JSON.stringify(session.testData.noResponse || {}));
+    STATE.ucl = JSON.parse(JSON.stringify(session.testData.ucl || {}));
+    STATE.notes = session.testData.notes || '';
+    STATE.speech.earState = JSON.parse(JSON.stringify(session.testData.earState || {
+      right: { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null },
+      left:  { wordIdx:0, wordList:[], results:[], started:false, srt:null, speechDb:null }
+    }));
+  }
+
+  showToast('✓ Oturum yüklendi', 'success');
+  updateFreqGrid();
+  renderAudiogram();
+  updateSavedPointsDisplay();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4678,12 +4733,28 @@ const db = getFirestore(app);
 window.savePatientToFirebase = async function(patientData, testData) {
   try {
     let patientRef = null;
-    if(patientData.id) {
-      const q = query(collection(db, 'patients'), where('id', '==', patientData.id));
-      const snap = await getDocs(q);
-      if(!snap.empty) patientRef = snap.docs[0].ref;
-    }
-    if(!patientRef) {
+
+    // Aynı kişiyi bulmak için: firstName + lastName + dob kombinasyonu
+    const q = query(
+      collection(db, 'patients'),
+      where('firstName', '==', patientData.firstName),
+      where('lastName', '==', patientData.lastName),
+      where('dob', '==', patientData.dob || '')
+    );
+    const snap = await getDocs(q);
+
+    if(!snap.empty) {
+      // Hasta bulundu - mevcut kaydını kullan
+      patientRef = snap.docs[0].ref;
+      await updateDoc(patientRef, {
+        updatedAt: serverTimestamp(),
+        complaint: patientData.complaint || '',
+        history: patientData.history || '',
+        important: patientData.important || '',
+        examiner: patientData.examiner || ''
+      });
+    } else {
+      // Yeni hasta - kaydı oluştur
       patientRef = await addDoc(collection(db, 'patients'), {
         firstName: patientData.firstName,
         lastName: patientData.lastName,
@@ -4693,25 +4764,29 @@ window.savePatientToFirebase = async function(patientData, testData) {
         complaint: patientData.complaint || '',
         history: patientData.history || '',
         important: patientData.important || '',
+        examiner: patientData.examiner || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-    } else {
-      await updateDoc(patientRef, { updatedAt: serverTimestamp() });
     }
-    await addDoc(collection(patientRef, 'tests'), {
-      date: serverTimestamp(),
+
+    // Oturum (session) kaydı oluştur
+    const sessionRef = await addDoc(collection(patientRef, 'sessions'), {
+      timestamp: serverTimestamp(),
       examiner: patientData.examiner || '',
-      notes: testData.notes || '',
-      thresholds: testData.thresholds || {},
-      maskedThresholds: testData.maskedThresholds || {},
-      noResponse: testData.noResponse || {},
-      ucl: testData.ucl || {},
-      speechSRT: testData.speechSRT || {},
-      speechScores: testData.speechScores || {},
-      tinnitus: testData.tinnitus || {}
+      testData: {
+        notes: testData.notes || '',
+        thresholds: testData.thresholds || {},
+        maskedThresholds: testData.maskedThresholds || {},
+        noResponse: testData.noResponse || {},
+        ucl: testData.ucl || {},
+        speechSRT: testData.speechSRT || {},
+        speechScores: testData.speechScores || {},
+        tinnitus: testData.tinnitus || {}
+      }
     });
-    return { success: true, patientId: patientRef.id };
+
+    return { success: true, patientId: patientRef.id, sessionId: sessionRef.id };
   } catch(e) {
     console.error('Firebase error:', e);
     return { success: false, error: e.message };
@@ -4729,14 +4804,24 @@ window.loadPatientsFromFirebase = async function() {
   }
 };
 
-window.loadPatientTests = async function(fbId) {
+window.loadPatientSessions = async function(fbId) {
   try {
-    const q = query(collection(db, 'patients', fbId, 'tests'), orderBy('date', 'desc'));
+    const q = query(collection(db, 'patients', fbId, 'sessions'), orderBy('timestamp', 'desc'));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snap.docs.map(d => ({
+      id: d.id,
+      timestamp: d.data().timestamp?.toDate?.() || new Date(),
+      ...d.data()
+    }));
   } catch(e) {
+    console.error('Session load error:', e);
     return [];
   }
+};
+
+// Eski fonksiyon (geriye uyumluluk için)
+window.loadPatientTests = async function(fbId) {
+  return window.loadPatientSessions(fbId);
 };
 
 window.fbReady = true;
