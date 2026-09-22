@@ -4185,6 +4185,15 @@ function loadPatientForTest(fbId) {
     important: p.important
   };
 
+  // Test sekmelerini etkinleştir
+  ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
+    document.getElementById(id).disabled = false;
+  });
+
+  // Hasta adını üstte göster
+  document.getElementById('topPatient').innerHTML =
+    `<strong>${p.firstName} ${p.lastName}</strong> · ${p.dob || '—'}`;
+
   // Test ekranına git
   showScreen('sAudiometry');
   showToast(`✓ ${p.firstName} ${p.lastName} yüklendi`, 'success');
