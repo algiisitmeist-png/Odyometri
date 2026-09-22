@@ -632,6 +632,11 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
         <span title="N: NR"><kbd style="background:var(--gray-light);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">N</kbd> NR</span>
       </div>
     </div>
+
+    <!-- SONUÇLARA GİT BUTONU -->
+    <div style="padding:12px 20px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+      <button onclick="buildResult(); showScreen('sResult')" class="btn btn-sm" style="background:var(--red);color:#fff">📊 Sonuçları Gör →</button>
+    </div>
   </div>
 </div>
 
@@ -812,6 +817,11 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
         </div>
 
       </div>
+    </div>
+
+    <!-- SONUÇLARA GİT BUTONU -->
+    <div style="padding:12px 20px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+      <button onclick="buildResult(); showScreen('sResult')" class="btn btn-sm" style="background:var(--red);color:#fff">📊 Sonuçları Gör →</button>
     </div>
   </div>
 </div>
@@ -2838,7 +2848,12 @@ function finishSpeechEar(){
       }
     }, 800);
   } else {
-    showToast('Her iki kulak tamamlandı!', 'success');
+    showToast('Her iki kulak tamamlandı! Sonuçlar açılıyor...', 'success');
+    // Otomatik olarak sonuçlar sayfasına geç
+    setTimeout(() => {
+      buildResult();
+      showScreen('sResult');
+    }, 1000);
   }
 }
 
