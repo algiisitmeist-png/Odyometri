@@ -416,7 +416,10 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
           style="width:100%;padding:10px 14px;border:1.5px solid #fecdd3;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--gray);outline:none;resize:vertical;min-height:60px;line-height:1.5"></textarea>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="startTest()">Testi Başlat →</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button class="btn" onclick="savePatientOnly()" style="background:var(--success);color:#fff;width:100%;margin-top:8px;padding:15px">☁️ Kaydet</button>
+      <button class="btn btn-primary" onclick="startTest()" style="margin-top:8px">Testi Başlat →</button>
+    </div>
   </div>
 </div>
 
@@ -3961,6 +3964,52 @@ function loadSavedCalibration() {
       Object.assign(FREQ_MULTS, parsed);
       console.log('Kalibrasyon yüklendi');
     } catch(e) {}
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// HASTAYII KAYDET (FIREBASE'E)
+// ════════════════════════════════════════════════════════════
+async function savePatientOnly() {
+  const first = document.getElementById('pFirstName').value.trim();
+  const last  = document.getElementById('pLastName').value.trim();
+  if (!first || !last) { showToast('Ad ve soyad zorunludur', 'error'); return; }
+
+  if(!window.fbReady) { showToast('Firebase bağlanıyor...', 'warn'); return; }
+
+  const patientData = {
+    firstName: first,
+    lastName: last,
+    dob: document.getElementById('pDob').value,
+    gender: document.getElementById('pGender').value,
+    id: document.getElementById('pId').value,
+    complaint: document.getElementById('pComplaint').value,
+    examiner: document.getElementById('pExaminer').value,
+    history: document.getElementById('pHistory').value,
+    important: document.getElementById('pImportant').value,
+    date: new Date().toISOString()
+  };
+
+  try {
+    const result = await window.savePatientToFirebase(patientData, {});
+    if(result.success) {
+      showToast(`✓ ${first} ${last} Firebase'e kaydedildi`, 'success');
+      // Formu temizle
+      document.getElementById('pFirstName').value = '';
+      document.getElementById('pLastName').value = '';
+      document.getElementById('pDob').value = '';
+      document.getElementById('pGender').value = '';
+      document.getElementById('pId').value = '';
+      document.getElementById('pComplaint').value = '';
+      document.getElementById('pExaminer').value = '';
+      document.getElementById('pHistory').value = '';
+      document.getElementById('pImportant').value = '';
+    } else {
+      showToast('Kayıt hatası: ' + result.error, 'error');
+    }
+  } catch(e) {
+    console.error('Kayıt hatası:', e);
+    showToast('Kayıt başarısız', 'error');
   }
 }
 
