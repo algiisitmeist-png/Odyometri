@@ -1956,7 +1956,7 @@ function showPatientDetails(patient) {
 }
 
 // Sonuç sayfasıyla aynı klinik format — geçmiş oturumlar için
-function calcPTA(thresholds, ear) {
+function histPTA(thresholds, ear) {
   if (!thresholds || !thresholds[ear]) return null;
   const vs = [500,1000,2000,4000].map(f => thresholds[ear][f]).filter(v => v !== null && v !== undefined);
   return vs.length > 0 ? Math.round(vs.reduce((a,b)=>a+b,0)/vs.length) : null;
@@ -2001,7 +2001,7 @@ function renderSelectedSession(idx) {
   ['right','left'].forEach(ear => {
     const color = ear==='right' ? 'var(--right-color)' : 'var(--left-color)';
     const label = ear==='right' ? '👂 Sağ Kulak' : '👂 Sol Kulak';
-    const ptaVal = calcPTA(th, ear);
+    const ptaVal = histPTA(th, ear);
     const earSrt = srt[ear];
     const earSc = sc[ear];
     const uclFreqs = Object.entries(ucl[ear] || {}).filter(([,v]) => v !== null && v !== undefined);
