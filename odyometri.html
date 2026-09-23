@@ -2030,28 +2030,120 @@ function showPatientDetails(patient) {
   }
 }
 
+// Sonuç sayfasıyla aynı klinik format — geçmiş oturumlar için
+function calcPTA(thresholds, ear) {
+  if (!thresholds || !thresholds[ear]) return null;
+  const vs = [500,1000,2000,4000].map(f => thresholds[ear][f]).filter(v => v !== null && v !== undefined);
+  return vs.length > 0 ? Math.round(vs.reduce((a,b)=>a+b,0)/vs.length) : null;
+}
+function hlGrade(db) {
+  if (db===null||db===undefined) return '—';
+  if (db<=20) return 'Normal'; if (db<=40) return 'Çok Hafif İşitme Kaybı';
+  if (db<=55) return 'Hafif İşitme Kaybı'; if (db<=70) return 'Orta İşitme Kaybı';
+  if (db<=90) return 'İleri İşitme Kaybı'; return 'Çok İleri İşitme Kaybı';
+}
+function hlGradeColor(db) {
+  if (db===null||db===undefined) return '#888';
+  if (db<=20) return 'var(--success)'; if (db<=40) return '#558b2f';
+  if (db<=55) return 'var(--warning)'; if (db<=70) return '#e65100';
+  return 'var(--red)';
+}
+
 function renderSelectedSession(idx) {
   const view = document.getElementById('sessionResultView');
   if (idx === '' || idx === null || idx === undefined || !STATE.selectedPatientTests) { view.innerHTML = ''; return; }
   const t = STATE.selectedPatientTests[+idx];
+  const patient = STATE.selectedPatient || {};
   if (!t) { view.innerHTML = ''; return; }
 
-  const rows = [];
-  if (t.examiner) rows.push(`<div><strong>Uygulayan:</strong> ${t.examiner}</div>`);
-  if (t.notes) rows.push(`<div><strong>Not:</strong> ${t.notes}</div>`);
-  if (t.thresholds && Object.keys(t.thresholds).length) {
-    rows.push(`<div style="margin-top:8px"><strong>Saf Ses Eşikleri:</strong><br><span style="font-family:monospace;font-size:12px">${JSON.stringify(t.thresholds)}</span></div>`);
+  const DISP=[125,250,500,1000,2000,3000,4000,6000,8000];
+  const th = t.thresholds || {right:{}, left:{}};
+  const masked = t.maskedThresholds || {right:{}, left:{}};
+  const nr = t.noResponse || {right:{}, left:{}};
+  const ucl = t.ucl || {right:{}, left:{}};
+  const sc = t.speechScores || {};
+  const srt = t.speechSRT || {};
+
+  let html = '';
+
+  // Uygulayan / not
+  if (t.examiner || t.notes) {
+    html += `<div style="font-size:12px;color:var(--gray-mid);margin-bottom:12px">${t.examiner ? '<strong>Uygulayan:</strong> ' + t.examiner : ''}${t.notes ? (t.examiner ? ' · ' : '') + t.notes : ''}</div>`;
   }
-  if (t.speechScores && Object.keys(t.speechScores).length) {
-    rows.push(`<div style="margin-top:8px"><strong>Konuşma Skorları:</strong><br><span style="font-family:monospace;font-size:12px">${JSON.stringify(t.speechScores)}</span></div>`);
+
+  // PTA + SRT + Konuşma skoru kartları
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">`;
+  ['right','left'].forEach(ear => {
+    const color = ear==='right' ? 'var(--right-color)' : 'var(--left-color)';
+    const label = ear==='right' ? '👂 Sağ Kulak' : '👂 Sol Kulak';
+    const ptaVal = calcPTA(th, ear);
+    const earSrt = srt[ear];
+    const earSc = sc[ear];
+    const uclFreqs = Object.entries(ucl[ear] || {}).filter(([,v]) => v !== null && v !== undefined);
+    html += `<div style="background:#fff;border-radius:10px;padding:14px;border-left:4px solid ${color}">
+      <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:6px">${label}</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px">
+        <span style="font-family:'DM Serif Display',serif;font-size:26px;color:${color};line-height:1">${ptaVal ?? '—'}</span>
+        <span style="font-size:11px;color:var(--gray-mid)">dB HL PTA</span>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:${hlGradeColor(ptaVal)};margin-bottom:6px">${hlGrade(ptaVal)}</div>
+      <div style="font-size:11px;color:var(--gray-mid);display:flex;flex-direction:column;gap:2px">
+        ${earSrt!==undefined && earSrt!==null ? `<span>SRT: <strong style="color:${color}">${earSrt} dB HL</strong></span>` : ''}
+        ${earSc ? `<span>Kelime Tanıma: <strong style="color:${color}">%${earSc.pct}</strong> (${earSc.correct}/${earSc.total} @ ${earSc.db} dB)</span>` : ''}
+        ${uclFreqs.length>0 ? `<span>UCL: ${uclFreqs.map(([f,v])=>`${parseInt(f)>=1000?parseInt(f)/1000+'k':f}Hz=${v}dB`).join(', ')}</span>` : ''}
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Eşik tablosu
+  html += `<div style="overflow-x:auto;margin-bottom:16px">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:var(--gray)">
+        <th style="padding:6px 8px;text-align:left;font-weight:700;color:rgba(255,255,255,.7);font-size:9px">Kulak</th>
+        ${DISP.map(f=>`<th style="padding:6px 4px;text-align:center;font-weight:700;color:#fff;font-size:9px">${f>=1000?f/1000+'k':f}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td style="padding:6px 8px;font-weight:700;color:var(--right-color)">Sağ</td>
+          ${DISP.map(f=>{
+            const v=(th.right||{})[f]; const m=(masked.right||{})[f]; const n=(nr.right||{})[f];
+            return `<td style="padding:5px;text-align:center">
+              ${n?'<span style="color:var(--warning);font-weight:700">NR</span>':(v!==null&&v!==undefined)?`<span style="color:var(--right-color);font-weight:700">${v}</span>`:'<span style="color:#ccc">—</span>'}
+              ${(m!==null&&m!==undefined)?`<sup style="color:#e57373;font-size:8px">[${m}]</sup>`:''}
+            </td>`;
+          }).join('')}
+        </tr>
+        <tr style="background:var(--gray-light)">
+          <td style="padding:6px 8px;font-weight:700;color:var(--left-color)">Sol</td>
+          ${DISP.map(f=>{
+            const v=(th.left||{})[f]; const m=(masked.left||{})[f]; const n=(nr.left||{})[f];
+            return `<td style="padding:5px;text-align:center">
+              ${n?'<span style="color:var(--warning);font-weight:700">NR</span>':(v!==null&&v!==undefined)?`<span style="color:var(--left-color);font-weight:700">${v}</span>`:'<span style="color:#ccc">—</span>'}
+              ${(m!==null&&m!==undefined)?`<sup style="color:#64b5f6;font-size:8px">[${m}]</sup>`:''}
+            </td>`;
+          }).join('')}
+        </tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  // Tinnitus (varsa, okunur formatta)
+  if (t.tinnitus && (t.tinnitus.pitchFreq || t.tinnitus.pitchDb)) {
+    html += `<div style="background:#fff;border-radius:8px;padding:10px 12px;font-size:11px;color:var(--gray-mid);margin-bottom:8px">
+      <strong>Tinnitus:</strong> ${t.tinnitus.pitchFreq ? t.tinnitus.pitchFreq + ' Hz' : ''}${t.tinnitus.pitchDb ? ' @ ' + t.tinnitus.pitchDb + ' dB' : ''}
+    </div>`;
   }
-  if (t.speechSRT && Object.keys(t.speechSRT).length) {
-    rows.push(`<div style="margin-top:8px"><strong>SRT:</strong> ${JSON.stringify(t.speechSRT)}</div>`);
+
+  // Şikayet / Öykü
+  if (patient.complaint || patient.history) {
+    html += `<div style="background:#fff;border-radius:8px;padding:10px 12px;font-size:11px;color:var(--gray-mid);line-height:1.6">
+      ${patient.complaint ? `<div><strong>Şikayet:</strong> ${patient.complaint}</div>` : ''}
+      ${patient.history ? `<div><strong>Öykü:</strong> ${patient.history}</div>` : ''}
+    </div>`;
   }
-  if (t.tinnitus && Object.keys(t.tinnitus).length) {
-    rows.push(`<div style="margin-top:8px"><strong>Tinnitus:</strong> ${JSON.stringify(t.tinnitus)}</div>`);
-  }
-  view.innerHTML = rows.length ? rows.join('') : '<span style="color:var(--gray-mid)">Bu oturumda kayıtlı veri yok.</span>';
+
+  view.innerHTML = html;
 }
 
 function startNewTest() {
