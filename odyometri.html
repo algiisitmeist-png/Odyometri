@@ -527,6 +527,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       </div>
 
       <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="showScreen('sPatient')">+ Yeni Hasta</button>
+      <button class="btn btn-gray btn-sm" style="margin-top:8px;width:100%" onclick="mergeDuplicatesNow()" title="Aynı ad+soyad+doğum tarihine sahip kayıtları tek kayıtta birleştirir">🔧 Mükerrer Kayıtları Birleştir</button>
     </div>
 
     <!-- SAĞ PANEL - Seçilen Hasta Detayları -->
@@ -1929,11 +1930,11 @@ function startTest() {
   showToast(`Hoş geldiniz, ${first}!`, 'success');
 }
 
-function savePatientAndGoList() {
+async function savePatientAndGoList() {
   const first = document.getElementById('pFirstName').value.trim();
   const last  = document.getElementById('pLastName').value.trim();
   if (!first || !last) { showToast('Ad ve soyad zorunludur', 'error'); return; }
-  STATE.patient = {
+  const patientData = {
     firstName: first, lastName: last,
     dob: document.getElementById('pDob').value,
     gender: document.getElementById('pGender').value,
@@ -1941,13 +1942,19 @@ function savePatientAndGoList() {
     complaint: document.getElementById('pComplaint').value,
     examiner: document.getElementById('pExaminer').value,
     history: document.getElementById('pHistory').value,
-    important: document.getElementById('pImportant').value,
-    date: new Date().toISOString()
+    important: document.getElementById('pImportant').value
   };
+  showToast('Kaydediliyor...', 'info');
+  // Firebase'e yaz — varsa (ad+soyad+doğum tarihi eşleşirse) günceller, yoksa oluşturur (mükerrer önlenir)
+  const result = await window.saveOrUpdatePatientOnly(patientData);
+  if (!result.success) {
+    showToast('Kayıt hatası: ' + result.error, 'error');
+    return;
+  }
+  STATE.patient = { ...patientData, fbId: result.patientId };
   document.getElementById('topPatient').innerHTML = `<strong>${first} ${last}</strong>`;
   showToast(`Hasta kaydedildi!`, 'success');
-  // Hastaları listele
-  setTimeout(() => loadPatientList(), 500);
+  loadPatientList();
 }
 
 function loadPatientList() {
@@ -1955,30 +1962,24 @@ function loadPatientList() {
   const container = document.getElementById('patientListContainer');
   container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray-mid)">Hastalar yükleniyor...</div>';
 
-  // Firebase'den hastaları yükle
   window.loadPatientsFromFirebase().then(patients => {
+    STATE.patientListCache = patients || [];
     if (!patients || patients.length === 0) {
-      // Eğer Firebase boşsa, STATE.patient'ı göster
-      if (STATE.patient) {
-        container.innerHTML = `<div onclick="selectPatient({...STATE.patient, id: 'current'})" style="padding:14px;border-bottom:1px solid var(--border);cursor:pointer;background:#fff;transition:all .2s" onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='#fff'">
-          <strong>${STATE.patient.firstName} ${STATE.patient.lastName}</strong><br>
-          <small style="color:var(--gray-mid)">${STATE.patient.dob || 'DOB -'}</small>
-        </div>`;
-      } else {
-        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray-mid)">Hasta bulunamadı</div>';
-      }
-    } else {
-      container.innerHTML = patients.map(p => `
-        <div onclick="selectPatient(${JSON.stringify(p)})" style="padding:14px;border-bottom:1px solid var(--border);cursor:pointer;background:#fff;transition:all .2s" onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='#fff'">
-          <strong>${p.firstName} ${p.lastName}</strong><br>
-          <small style="color:var(--gray-mid)">${p.dob || 'DOB -'}</small>
-        </div>
-      `).join('');
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray-mid)">Kayıtlı hasta yok. "+ Yeni Hasta" ile ekleyin.</div>';
+      return;
     }
+    container.innerHTML = patients.map((p, i) => `
+      <div data-idx="${i}" onclick="selectPatientByIndex(${i})" style="padding:14px;border-bottom:1px solid var(--border);cursor:pointer;background:#fff;transition:all .2s" onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='#fff'">
+        <strong>${p.firstName} ${p.lastName}</strong><br>
+        <small style="color:var(--gray-mid)">${p.dob || 'D.Tarihi —'}${p.complaint ? ' · ' + p.complaint : ''}</small>
+      </div>
+    `).join('');
   });
 }
 
-function selectPatient(patient) {
+function selectPatientByIndex(i) {
+  const patient = STATE.patientListCache[i];
+  if (!patient) return;
   STATE.selectedPatient = patient;
   showPatientDetails(patient);
 }
@@ -1998,32 +1999,62 @@ function showPatientDetails(patient) {
         <div><span style="color:var(--gray-mid)">Şikayet:</span><br><strong>${patient.complaint || '—'}</strong></div>
       </div>
 
-      <button class="btn btn-success" style="width:100%;margin-bottom:20px" onclick="startNewTest('${patient.id || 'current'}')">+ Yeni Test Başlat</button>
+      <button class="btn btn-success" style="width:100%;margin-bottom:20px" onclick="startNewTest()">+ Yeni Test Başlat</button>
 
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:12px">Eski Oturumlar</div>
-      <div id="oldSessionsList" style="background:var(--gray-light);border-radius:10px;padding:12px;max-height:300px;overflow-y:auto">
-        <div style="text-align:center;color:var(--gray-mid);padding:20px">Test bulunamadı</div>
-      </div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Eski Oturumlar</div>
+      <select id="oldSessionsDropdown" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:16px" onchange="renderSelectedSession(this.value)">
+        <option value="">Yükleniyor...</option>
+      </select>
+      <div id="sessionResultView" style="background:var(--gray-light);border-radius:10px;padding:14px;min-height:60px;font-size:13px"></div>
     </div>
   `;
 
-  // Eski testleri yükle
   if (patient.fbId) {
     window.loadPatientTests(patient.fbId).then(tests => {
-      const sessionsList = document.getElementById('oldSessionsList');
-      if (tests && tests.length > 0) {
-        sessionsList.innerHTML = tests.map(t => `
-          <div style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;background:#fff;border-radius:6px;margin-bottom:6px;transition:all .2s" onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='#fff'" onclick="showTestResult(${JSON.stringify(t)})">
-            <strong>${new Date(t.date).toLocaleDateString('tr-TR')}</strong><br>
-            <small style="color:var(--gray-mid)">${t.testType || 'Test'}</small>
-          </div>
-        `).join('');
+      STATE.selectedPatientTests = tests || [];
+      const dropdown = document.getElementById('oldSessionsDropdown');
+      if (!tests || tests.length === 0) {
+        dropdown.innerHTML = '<option value="">Test bulunamadı</option>';
+        document.getElementById('sessionResultView').innerHTML = '<span style="color:var(--gray-mid)">Bu hastaya ait kayıtlı test yok.</span>';
+        return;
       }
+      dropdown.innerHTML = tests.map((t, i) => {
+        const d = t.date && t.date.seconds ? new Date(t.date.seconds * 1000) : (t.date ? new Date(t.date) : null);
+        const label = d ? d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : `Test ${i+1}`;
+        return `<option value="${i}">${label}</option>`;
+      }).join('');
+      renderSelectedSession('0');
     });
+  } else {
+    document.getElementById('oldSessionsDropdown').innerHTML = '<option value="">Test bulunamadı</option>';
   }
 }
 
-function startNewTest(patientId) {
+function renderSelectedSession(idx) {
+  const view = document.getElementById('sessionResultView');
+  if (idx === '' || idx === null || idx === undefined || !STATE.selectedPatientTests) { view.innerHTML = ''; return; }
+  const t = STATE.selectedPatientTests[+idx];
+  if (!t) { view.innerHTML = ''; return; }
+
+  const rows = [];
+  if (t.examiner) rows.push(`<div><strong>Uygulayan:</strong> ${t.examiner}</div>`);
+  if (t.notes) rows.push(`<div><strong>Not:</strong> ${t.notes}</div>`);
+  if (t.thresholds && Object.keys(t.thresholds).length) {
+    rows.push(`<div style="margin-top:8px"><strong>Saf Ses Eşikleri:</strong><br><span style="font-family:monospace;font-size:12px">${JSON.stringify(t.thresholds)}</span></div>`);
+  }
+  if (t.speechScores && Object.keys(t.speechScores).length) {
+    rows.push(`<div style="margin-top:8px"><strong>Konuşma Skorları:</strong><br><span style="font-family:monospace;font-size:12px">${JSON.stringify(t.speechScores)}</span></div>`);
+  }
+  if (t.speechSRT && Object.keys(t.speechSRT).length) {
+    rows.push(`<div style="margin-top:8px"><strong>SRT:</strong> ${JSON.stringify(t.speechSRT)}</div>`);
+  }
+  if (t.tinnitus && Object.keys(t.tinnitus).length) {
+    rows.push(`<div style="margin-top:8px"><strong>Tinnitus:</strong> ${JSON.stringify(t.tinnitus)}</div>`);
+  }
+  view.innerHTML = rows.length ? rows.join('') : '<span style="color:var(--gray-mid)">Bu oturumda kayıtlı veri yok.</span>';
+}
+
+function startNewTest() {
   if (STATE.selectedPatient) {
     STATE.patient = STATE.selectedPatient;
     document.getElementById('topPatient').innerHTML = `<strong>${STATE.patient.firstName} ${STATE.patient.lastName}</strong>`;
@@ -2036,8 +2067,15 @@ function startNewTest(patientId) {
   }
 }
 
-function showTestResult(test) {
-  showToast('Test detayları: ' + JSON.stringify(test).substring(0, 50), 'info');
+async function mergeDuplicatesNow() {
+  showToast('Mükerrer kayıtlar taranıyor...', 'info');
+  const result = await window.mergeDuplicatePatients();
+  if (result.success) {
+    showToast(`${result.merged} mükerrer kayıt birleştirildi`, 'success');
+    loadPatientList();
+  } else {
+    showToast('Birleştirme hatası: ' + result.error, 'error');
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4483,18 +4521,73 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Normalize helper — isim/soyisim/doğum tarihine göre aynı hastayı tanımak için
+function normKey(s) { return (s || '').toString().trim().toLocaleLowerCase('tr-TR'); }
+
+// Aynı hastayı bulur (TC No varsa ona göre, yoksa ad+soyad+doğum tarihine göre), yoksa null döner
+async function findExistingPatientRef(patientData) {
+  // 1) TC Kimlik No ile eşleştirme (girildiyse)
+  if (patientData.id) {
+    const q1 = query(collection(db, 'patients'), where('id', '==', patientData.id));
+    const snap1 = await getDocs(q1);
+    if (!snap1.empty) return snap1.docs[0].ref;
+  }
+  // 2) Ad + Soyad + Doğum tarihi ile eşleştirme (TC girilmemiş olsa bile mükerrer kayıt oluşmasın)
+  const fn = normKey(patientData.firstName);
+  const ln = normKey(patientData.lastName);
+  if (fn && ln) {
+    const q2 = query(collection(db, 'patients'), where('firstNameKey', '==', fn), where('lastNameKey', '==', ln));
+    const snap2 = await getDocs(q2);
+    if (!snap2.empty) {
+      const dob = patientData.dob || '';
+      // Doğum tarihi doluysa, aynı tarihe sahip kaydı tercih et; yoksa ilk bulunanı kullan
+      const match = snap2.docs.find(d => (d.data().dob || '') === dob) || snap2.docs[0];
+      return match.ref;
+    }
+  }
+  return null;
+}
+
+// Hasta kaydını oluşturur/günceller — test verisi olmadan (Hasta sekmesinde "Kaydet" için)
+window.saveOrUpdatePatientOnly = async function(patientData) {
+  try {
+    let patientRef = await findExistingPatientRef(patientData);
+    const payload = {
+      firstName: patientData.firstName,
+      lastName: patientData.lastName,
+      firstNameKey: normKey(patientData.firstName),
+      lastNameKey: normKey(patientData.lastName),
+      dob: patientData.dob || '',
+      gender: patientData.gender || '',
+      id: patientData.id || '',
+      complaint: patientData.complaint || '',
+      examiner: patientData.examiner || '',
+      history: patientData.history || '',
+      important: patientData.important || '',
+      updatedAt: serverTimestamp()
+    };
+    if (!patientRef) {
+      payload.createdAt = serverTimestamp();
+      patientRef = await addDoc(collection(db, 'patients'), payload);
+    } else {
+      await updateDoc(patientRef, payload);
+    }
+    return { success: true, patientId: patientRef.id };
+  } catch(e) {
+    console.error('Firebase error:', e);
+    return { success: false, error: e.message };
+  }
+};
+
 window.savePatientToFirebase = async function(patientData, testData) {
   try {
-    let patientRef = null;
-    if(patientData.id) {
-      const q = query(collection(db, 'patients'), where('id', '==', patientData.id));
-      const snap = await getDocs(q);
-      if(!snap.empty) patientRef = snap.docs[0].ref;
-    }
+    let patientRef = await findExistingPatientRef(patientData);
     if(!patientRef) {
       patientRef = await addDoc(collection(db, 'patients'), {
         firstName: patientData.firstName,
         lastName: patientData.lastName,
+        firstNameKey: normKey(patientData.firstName),
+        lastNameKey: normKey(patientData.lastName),
         dob: patientData.dob || '',
         gender: patientData.gender || '',
         id: patientData.id || '',
@@ -4505,7 +4598,11 @@ window.savePatientToFirebase = async function(patientData, testData) {
         updatedAt: serverTimestamp()
       });
     } else {
-      await updateDoc(patientRef, { updatedAt: serverTimestamp() });
+      await updateDoc(patientRef, {
+        firstNameKey: normKey(patientData.firstName),
+        lastNameKey: normKey(patientData.lastName),
+        updatedAt: serverTimestamp()
+      });
     }
     await addDoc(collection(patientRef, 'tests'), {
       date: serverTimestamp(),
@@ -4526,11 +4623,53 @@ window.savePatientToFirebase = async function(patientData, testData) {
   }
 };
 
+// Firebase'de zaten oluşmuş mükerrer kayıtları birleştirir (aynı ad+soyad+doğum tarihi)
+window.mergeDuplicatePatients = async function() {
+  try {
+    const snap = await getDocs(collection(db, 'patients'));
+    const all = snap.docs.map(d => ({ ref: d.ref, id: d.id, ...d.data() }));
+    const groups = {};
+    all.forEach(p => {
+      const key = normKey(p.firstName) + '|' + normKey(p.lastName) + '|' + (p.dob || '');
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    });
+    let mergedCount = 0;
+    for (const key in groups) {
+      const group = groups[key];
+      if (group.length < 2) continue;
+      // En eski oluşturulanı (ya da ilkini) ana kayıt kabul et
+      group.sort((a,b) => (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0));
+      const survivor = group[0];
+      for (let i = 1; i < group.length; i++) {
+        const dup = group[i];
+        // Kopyanın testlerini ana kayda taşı
+        const testsSnap = await getDocs(collection(dup.ref, 'tests'));
+        for (const t of testsSnap.docs) {
+          const data = t.data();
+          await addDoc(collection(survivor.ref, 'tests'), data);
+        }
+        // Kopyayı sil (Firestore doc silme burada import edilmediği için pasif hale getiriyoruz)
+        await updateDoc(dup.ref, { mergedInto: survivor.id, firstNameKey: '__merged__' });
+        mergedCount++;
+      }
+      // Ana kayıtta normalize alanların dolu olduğundan emin ol
+      await updateDoc(survivor.ref, { firstNameKey: normKey(survivor.firstName), lastNameKey: normKey(survivor.lastName) });
+    }
+    return { success: true, merged: mergedCount };
+  } catch(e) {
+    console.error('Merge error:', e);
+    return { success: false, error: e.message };
+  }
+};
+
 window.loadPatientsFromFirebase = async function() {
   try {
     const q = query(collection(db, 'patients'), orderBy('updatedAt', 'desc'));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ fbId: d.id, ...d.data() }));
+    return snap.docs
+      .map(d => ({ fbId: d.id, ...d.data() }))
+      .filter(p => p.firstNameKey !== '__merged__'); // birleştirilmiş (silinmiş sayılan) kayıtları gizle
   } catch(e) {
     console.error('Firebase load error:', e);
     return [];
