@@ -586,11 +586,18 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
     </div>
 
     <!-- Açıklama -->
-    <div class="ctrl-section" style="flex:1">
+    <div class="ctrl-section">
       <h3>Açıklama / Not</h3>
       <textarea id="testNotes" placeholder="İsteğe bağlı klinisyen notu..."
         style="width:100%;min-height:60px;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--gray);resize:vertical;outline:none;line-height:1.5"
         oninput="STATE.notes=this.value"></textarea>
+    </div>
+
+    <!-- Firebase'e Kaydet -->
+    <div class="ctrl-section" style="flex:1;display:flex;align-items:flex-end">
+      <button onclick="saveToFirebase(event)" style="width:100%;padding:12px;border-radius:10px;border:none;background:#f57c00;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+        ☁ Kaydet
+      </button>
     </div>
 
   </div>
@@ -762,7 +769,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
         <!-- SRT ÖZET -->
         <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px;border-left:3px solid var(--success);padding-left:8px">Kaydedilen SRT</div>
-        <div style="background:var(--gray-light);border-radius:10px;padding:12px">
+        <div style="background:var(--gray-light);border-radius:10px;padding:12px;margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
             <span style="font-size:12px;color:var(--right-color);font-weight:700">👂 Sağ</span>
             <span style="font-size:14px;font-weight:800;color:var(--right-color)" id="srtSummaryRight">—</span>
@@ -772,6 +779,11 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
             <span style="font-size:14px;font-weight:800;color:var(--left-color)" id="srtSummaryLeft">—</span>
           </div>
         </div>
+
+        <!-- Firebase'e Kaydet -->
+        <button onclick="saveToFirebase(event)" style="width:100%;padding:12px;border-radius:10px;border:none;background:#f57c00;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+          ☁ Kaydet
+        </button>
 
       </div>
 
@@ -1770,6 +1782,16 @@ function webSpeechFallback(text, onEnd) {
   utt.onend = () => { if (onEnd) onEnd(); };
   utt.onerror = () => { if (onEnd) onEnd(); };
   speechSynthesis.speak(utt);
+}
+
+// Türkçe TTS ayarları (konuşma testi ve SRT için)
+function getTTSLang(lang) {
+  return {lang: 'tr-TR', name: 'tr-TR', rate: 0.9};
+}
+
+// Google Cloud TTS için ses konfigürasyonu (Türkçe)
+function getGoogleVoiceConfig(lang) {
+  return {languageCode: 'tr-TR', name: 'tr-TR-Wavenet-D', ssmlGender: 'FEMALE'};
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4179,13 +4201,14 @@ function loadSavedCalibration() {
 // ════════════════════════════════════════════════════════════
 // FİREBASE KAYDET
 // ════════════════════════════════════════════════════════════
-async function saveToFirebase() {
+async function saveToFirebase(evt) {
   if(!STATE.patient) { showToast('Önce hasta kaydı yapın', 'error'); return; }
   if(!window.fbReady) { showToast('Firebase bağlanıyor...', 'warn'); return; }
 
-  const btn = document.getElementById('fbSaveBtn');
-  btn.textContent = '⏳ Kaydediliyor...';
-  btn.disabled = true;
+  // Tıklanan butonu kullan (Saf Ses / Konuşma / Sonuç ekranlarındaki her "Kaydet" butonu için ortak fonksiyon)
+  const btn = (evt && evt.currentTarget) || document.getElementById('fbSaveBtn');
+  const originalBg = btn ? btn.style.background : '';
+  if (btn) { btn.textContent = '⏳ Kaydediliyor...'; btn.disabled = true; }
 
   const testData = {
     notes: STATE.notes,
@@ -4204,18 +4227,13 @@ async function saveToFirebase() {
   const result = await window.savePatientToFirebase(STATE.patient, testData);
 
   if(result.success) {
-    btn.textContent = '✓ Kaydedildi';
-    btn.style.background = 'var(--success)';
+    if (btn) { btn.textContent = '✓ Kaydedildi'; btn.style.background = 'var(--success)'; }
     showToast('Firebase kaydedildi ✓', 'success');
     setTimeout(() => {
-      btn.textContent = '☁ Kaydet';
-      btn.style.background = '#f57c00';
-      btn.disabled = false;
+      if (btn) { btn.textContent = '☁ Kaydet'; btn.style.background = originalBg || '#f57c00'; btn.disabled = false; }
     }, 3000);
   } else {
-    btn.textContent = '✗ Hata';
-    btn.style.background = 'var(--red)';
-    btn.disabled = false;
+    if (btn) { btn.textContent = '✗ Hata'; btn.style.background = 'var(--red)'; btn.disabled = false; }
     showToast('Kayıt hatası: ' + result.error, 'error');
   }
 }
