@@ -1927,7 +1927,7 @@ function showPatientDetails(patient) {
       <button class="btn btn-success" style="width:100%;margin-bottom:20px" onclick="startNewTest()">+ Yeni Test Başlat</button>
 
       <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Eski Oturumlar</div>
-      <select id="oldSessionsDropdown" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:16px" onchange="renderSelectedSession(this.value)">
+      <select id="oldSessionsDropdown" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:16px" onchange="onSessionSelected(this.value)">
         <option value="">Yükleniyor...</option>
       </select>
       <div id="sessionResultView" style="background:var(--gray-light);border-radius:10px;padding:14px;min-height:60px;font-size:13px"></div>
@@ -1948,7 +1948,7 @@ function showPatientDetails(patient) {
         const label = d ? d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : `Test ${i+1}`;
         return `<option value="${i}">${label}</option>`;
       }).join('');
-      renderSelectedSession('0');
+      onSessionSelected('0');
     });
   } else {
     document.getElementById('oldSessionsDropdown').innerHTML = '<option value="">Test bulunamadı</option>';
@@ -1972,6 +1972,75 @@ function hlGradeColor(db) {
   if (db<=20) return 'var(--success)'; if (db<=40) return '#558b2f';
   if (db<=55) return 'var(--warning)'; if (db<=70) return '#e65100';
   return 'var(--red)';
+}
+
+// Dropdown'dan bir oturum seçildiğinde: hem sağdaki özeti göster hem de
+// Saf Ses / Konuşma / Sonuç ekranlarının canlı çalışması için STATE'e yükle.
+// Kaydetmezseniz bu STATE değişiklikleri Firebase'e hiç yazılmaz — orijinal
+// kayıt bozulmaz; oturumu tekrar seçtiğinizde eski değerlere döner.
+function onSessionSelected(idx) {
+  renderSelectedSession(idx);
+  if (idx === '' || idx === null || idx === undefined || !STATE.selectedPatientTests) return;
+  const t = STATE.selectedPatientTests[+idx];
+  if (!t || !STATE.selectedPatient) return;
+  loadSessionIntoState(STATE.selectedPatient, t);
+}
+
+function loadSessionIntoState(patient, test) {
+  const deepCopy = (obj, fallback) => obj ? JSON.parse(JSON.stringify(obj)) : fallback;
+
+  STATE.patient = patient;
+  const topEl = document.getElementById('topPatient');
+  if (topEl) topEl.innerHTML = `<strong>${patient.firstName} ${patient.lastName}</strong>`;
+
+  // Saf ses eşikleri
+  STATE.thresholds = deepCopy(test.thresholds, {right:{}, left:{}});
+  STATE.maskedThresholds = deepCopy(test.maskedThresholds, {right:{}, left:{}});
+  STATE.noResponse = deepCopy(test.noResponse, {right:{}, left:{}});
+  STATE.ucl = deepCopy(test.ucl, {right:{}, left:{}});
+  STATE.notes = test.notes || '';
+  const notesEl = document.getElementById('testNotes');
+  if (notesEl) notesEl.value = STATE.notes;
+
+  // Konuşma — kelime kelime kayıt saklanmıyor, toplu skordan yaklaşık diziye dönülüyor
+  const srt = test.speechSRT || {};
+  const scores = test.speechScores || {};
+  ['right','left'].forEach(ear => {
+    const es = STATE.speech.earState[ear];
+    es.srt = (srt[ear] !== undefined && srt[ear] !== null) ? srt[ear] : null;
+    const sc = scores[ear];
+    if (sc && sc.total) {
+      es.speechDb = sc.db ?? null;
+      const arr = new Array(sc.total).fill(false);
+      for (let i = 0; i < sc.correct && i < arr.length; i++) arr[i] = true;
+      es.results = arr;
+      es.started = true;
+    } else {
+      es.speechDb = null;
+      es.results = [];
+      es.started = false;
+    }
+    es.wordIdx = 0;
+    es.wordList = [];
+  });
+
+  // Tinnitus
+  if (test.tinnitus) STATE.tinnitus = deepCopy(test.tinnitus, STATE.tinnitus);
+
+  // Sekmeleri aç
+  ['tabAudio','tabSpeech','tabResult','tabTinnitus'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+
+  // Görselleri tazele (ekranlar henüz DOM'da render olmamış olabilir, hepsini try/catch ile sarıyoruz)
+  try { renderAudiogram(); } catch(e) {}
+  try { updateSavedPointsDisplay(); } catch(e) {}
+  try { setSpeechEar(STATE.speech.ear || 'right'); } catch(e) {}
+  try { updateSrtSummary(); } catch(e) {}
+  try { updateSafSesSRTTab(); } catch(e) {}
+
+  showToast('📂 Eski oturum yüklendi — değişiklik yapıp "☁ Kaydet" derseniz YENİ oturum olarak kaydedilir, kaydetmezseniz eski değerler korunur', 'info');
 }
 
 function renderSelectedSession(idx) {
