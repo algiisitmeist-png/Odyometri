@@ -1124,6 +1124,35 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       <h2 style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--gray);margin-bottom:6px">Manuel Kulaklık Kalibrasyonu</h2>
       <p style="font-size:13px;color:var(--gray-mid);margin-bottom:24px">Referans odyogram eşiklerinizi girin. Kulaklığı takıp her frekans için sesi duyduğunuz eşiği ölçün. Sistem farkı hesaplayarak gain değerlerini otomatik ayarlar.</p>
 
+      <!-- Doğrudan test paneli — Saf Ses ekranına gitmeden burada dinleyip ölçüm sütununa yazabilirsiniz -->
+      <div style="background:var(--gray-light);border-radius:10px;padding:16px;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:10px">🎧 Ölçüm Test Paneli</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+          <div style="display:flex;gap:6px">
+            <button type="button" id="calEarBtnRight" onclick="calibSetEar('right')" style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--right-color);background:var(--right-color);color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Sağ</button>
+            <button type="button" id="calEarBtnLeft" onclick="calibSetEar('left')" style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--left-color);background:#fff;color:var(--left-color);font-weight:700;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Sol</button>
+          </div>
+          <select id="calFreqSelect" onchange="calibSetFreq(this.value)" style="padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">
+            <option value="125">125 Hz</option>
+            <option value="250">250 Hz</option>
+            <option value="500">500 Hz</option>
+            <option value="1000" selected>1000 Hz</option>
+            <option value="2000">2000 Hz</option>
+            <option value="4000">4000 Hz</option>
+            <option value="6000">6000 Hz</option>
+            <option value="8000">8000 Hz</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button type="button" onclick="calibStepDb(-5)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:16px;font-weight:700;cursor:pointer">−</button>
+            <div style="min-width:64px;text-align:center;font-family:'DM Serif Display',serif;font-size:19px;color:var(--gray)"><span id="calDbDisplay">40</span> dB</div>
+            <button type="button" onclick="calibStepDb(5)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:16px;font-weight:700;cursor:pointer">+</button>
+          </div>
+          <button type="button" id="calPlayBtn" onclick="calibTogglePlay()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">▶ Çal</button>
+          <button type="button" onclick="calibWriteToMeas()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--success);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">↓ Ölçüm Sütununa Yaz</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-mid);margin-top:8px">Kulak + frekans seçip Çal'a basın, duyana kadar dB'yi ayarlayın, sonra "Ölçüm Sütununa Yaz" ile aşağıdaki tabloya aktarın.</div>
+      </div>
+
       <!-- Kalibrasyon giriş tablosu -->
       <div style="margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
         <!-- Header -->
@@ -2090,6 +2119,11 @@ function renderSelectedSession(idx) {
   });
   html += `</div>`;
 
+  // Odyogram grafiği
+  html += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;margin-bottom:16px">
+    <div id="sessionAudiogramView"></div>
+  </div>`;
+
   // Eşik tablosu
   html += `<div style="overflow-x:auto;margin-bottom:16px">
     <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -2138,6 +2172,7 @@ function renderSelectedSession(idx) {
   }
 
   view.innerHTML = html;
+  renderSessionAudiogram(t, 'sessionAudiogramView');
 }
 
 function startNewTest() {
@@ -2172,6 +2207,8 @@ function setEar(ear) {
   stopAll();
   document.querySelectorAll('.ear-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`.ear-btn.${ear}`).classList.add('active');
+  // Kulak değişince frekans her zaman o setin başlangıcına (1000 Hz / EHF'de 8000 Hz) döner
+  STATE.currentFreq = getActiveFreqs()[0];
   updateFreqGrid();
   updateSavedPointsDisplay();
 }
@@ -2464,6 +2501,7 @@ function stopTone() {
 function stopAll() {
   stopTone();
   stopMaskNoise();
+  if (typeof calibStopTone === 'function') calibStopTone();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2586,14 +2624,15 @@ function checkMaskingNeeded() {
 // ════════════════════════════════════════════════════════════
 // ODYOGRAFİ ÇİZ — SVG
 // ════════════════════════════════════════════════════════════
-function renderAudiogram() {
-  const svg = document.getElementById('audiogramSvg');
-  const W=700, H=480;
-  const L=72, R=W-100, T=55, B=H-45;
+// Odyogram çizim motoru — hem canlı STATE'ten (renderAudiogram) hem de
+// Hasta Listesi'ndeki eski oturum kayıtlarından (renderSessionAudiogram) kullanılır.
+function buildAudiogramMarkup(thresholds, maskedThresholds, noResponse, ucl, currentFreq, isEHF) {
+  // EHF modunda 9k-20k arası frekanslar log ölçekte birbirine çok yakın düşüyor;
+  // etiketlerin çakışmaması için üstte fazladan boşluk bırakıyoruz (bkz. aşağıdaki döndürülmüş etiketler)
+  const W=700, H = isEHF ? 520 : 480;
+  const L=72, R=W-100, T = isEHF ? 95 : 55, B=H-45;
   const PW=R-L, PH=B-T;
 
-  // Odyogram frekansları — normal veya EHF moduna göre
-  const isEHF = activeFreqSet === 'ehf';
   const DIAG_FREQS = isEHF
     ? [125,250,500,1000,2000,3000,4000,6000,8000,9000,10000,11200,12500,14000,16000,18000,20000]
     : [125,250,500,1000,2000,3000,4000,6000,8000];
@@ -2635,11 +2674,16 @@ function renderAudiogram() {
   DIAG_FREQS.forEach((f,i)=>{
     const x=xP(f);
     s+=`<line x1="${x}" y1="${T}" x2="${x}" y2="${B}" stroke="#ccc" stroke-width="1"/>`;
-    s+=`<text x="${x}" y="${T-10}" text-anchor="middle" font-size="12" font-weight="700" fill="#444" font-family="Plus Jakarta Sans,sans-serif">${DIAG_LABELS[i]}</text>`;
+    if (isEHF && f >= 9000) {
+      // 9k-20k arası etiketler çok sık — çakışmasınlar diye dikey yazıyoruz
+      s+=`<text x="${x}" y="${T-6}" text-anchor="start" font-size="9.5" font-weight="700" fill="#444" font-family="Plus Jakarta Sans,sans-serif" transform="rotate(-90,${x},${T-6})">${DIAG_LABELS[i]}</text>`;
+    } else {
+      s+=`<text x="${x}" y="${T-10}" text-anchor="middle" font-size="12" font-weight="700" fill="#444" font-family="Plus Jakarta Sans,sans-serif">${DIAG_LABELS[i]}</text>`;
+    }
   });
 
   // Eksen etiketleri
-  s+=`<text x="${L+PW/2}" y="${T-28}" text-anchor="middle" font-size="13" font-weight="700" fill="#333" font-family="Plus Jakarta Sans,sans-serif">Frekans (Hz)</text>`;
+  s+=`<text x="${L+PW/2}" y="${isEHF ? T-55 : T-28}" text-anchor="middle" font-size="13" font-weight="700" fill="#333" font-family="Plus Jakarta Sans,sans-serif">Frekans (Hz)</text>`;
   s+=`<text x="${L-48}" y="${T+PH/2}" text-anchor="middle" font-size="12" fill="#666" font-family="Plus Jakarta Sans,sans-serif" transform="rotate(-90,${L-48},${T+PH/2})">Şiddet (dB HL)</text>`;
 
   // Sağ taraf etiketler
@@ -2665,7 +2709,7 @@ function renderAudiogram() {
   ];
 
   EAR_CFG.forEach(cfg=>{
-    const src = cfg.masked ? STATE.maskedThresholds : STATE.thresholds;
+    const src = cfg.masked ? maskedThresholds : thresholds;
     const points = DIAG_FREQS.map(f=>({
       f, db:src[cfg.key][f], x:xP(f)
     })).filter(p=>p.db!==null);
@@ -2698,7 +2742,7 @@ function renderAudiogram() {
   ['right','left'].forEach(ek => {
     const color = ek==='right' ? '#cc1e1e' : '#1565a0';
     DIAG_FREQS.forEach(f => {
-      if(STATE.noResponse[ek][f]) {
+      if(noResponse[ek] && noResponse[ek][f]) {
         const x = xP(f);
         const y = yP(115); // en alta yakın
         const ox = ek==='right' ? -6 : 6; // sağ/sol offset
@@ -2714,8 +2758,8 @@ function renderAudiogram() {
   ['right','left'].forEach(ek => {
     const color = ek==='right' ? '#cc1e1e' : '#1565a0';
     DIAG_FREQS.forEach(f => {
-      const uclVal = STATE.ucl[ek][f];
-      if(uclVal !== null) {
+      const uclVal = ucl[ek] ? ucl[ek][f] : undefined;
+      if(uclVal !== null && uclVal !== undefined) {
         const x = xP(f);
         const y = yP(uclVal);
         const ox = ek==='right' ? -8 : 8;
@@ -2726,14 +2770,46 @@ function renderAudiogram() {
     });
   });
 
-  // Aktif frekans göstergesi
-  const ax=xP(STATE.currentFreq);
-  s+=`<line x1="${ax}" y1="${T}" x2="${ax}" y2="${B}" stroke="#999" stroke-width="1.5" stroke-dasharray="4,3" opacity=".5"/>`;
+  // Aktif frekans göstergesi (sadece canlı testte anlamlı — geçmiş oturumlarda gösterilmez)
+  if (currentFreq !== null && currentFreq !== undefined) {
+    const ax=xP(currentFreq);
+    s+=`<line x1="${ax}" y1="${T}" x2="${ax}" y2="${B}" stroke="#999" stroke-width="1.5" stroke-dasharray="4,3" opacity=".5"/>`;
+  }
 
   // Çerçeve
   s+=`<rect x="${L}" y="${T}" width="${PW}" height="${PH}" fill="none" stroke="#999" stroke-width="1.5"/>`;
 
-  svg.innerHTML = s;
+  return {markup: s, W, H};
+}
+
+function renderAudiogram() {
+  const svg = document.getElementById('audiogramSvg');
+  if (!svg) return;
+  const isEHF = activeFreqSet === 'ehf';
+  const {markup, W, H} = buildAudiogramMarkup(STATE.thresholds, STATE.maskedThresholds, STATE.noResponse, STATE.ucl, STATE.currentFreq, isEHF);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = markup;
+}
+
+// Hasta Listesi'nde eski bir oturumun odyogramını salt-okunur olarak çizer.
+function renderSessionAudiogram(test, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const thresholds = (test && test.thresholds) || {right:{}, left:{}};
+  const maskedThresholds = (test && test.maskedThresholds) || {right:{}, left:{}};
+  const noResponse = (test && test.noResponse) || {right:{}, left:{}};
+  const ucl = (test && test.ucl) || {right:{}, left:{}};
+  // Bu oturumda EHF (9k-20k) verisi var mı? Varsa geniş ölçekli grafiği kullan
+  const EHF_CHECK = [9000,10000,11200,12500,14000,16000,18000,20000];
+  const hasEHF = ['right','left'].some(ear =>
+    EHF_CHECK.some(f => thresholds[ear] && thresholds[ear][f] !== null && thresholds[ear][f] !== undefined)
+  );
+  const hasAnyPoint = ['right','left'].some(ear =>
+    thresholds[ear] && Object.values(thresholds[ear]).some(v => v !== null && v !== undefined)
+  );
+  if (!hasAnyPoint) { container.innerHTML = ''; return; }
+  const {markup, W, H} = buildAudiogramMarkup(thresholds, maskedThresholds, noResponse, ucl, null, hasEHF);
+  container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;max-height:360px">${markup}</svg>`;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4194,8 +4270,85 @@ function initTinnitusScreen(){
 }
 
 // ════════════════════════════════════════════════════════════
-// KULAKLIK KALİBRASYONU
+// KULAKLIK KALİBRASYONU — DOĞRUDAN TEST PANELİ
+// Kalibrasyon sekmesinden çıkmadan tonu çalıp "Ölçüm" sütununa yazabilmek için
+// Saf Ses ekranının STATE'ine dokunmayan, bağımsız bir mini ses motoru.
 // ════════════════════════════════════════════════════════════
+const calibTest = { ear:'right', freq:1000, db:40, playing:false, osc:null, gain:null, pan:null };
+
+function calibSetEar(ear) {
+  calibTest.ear = ear;
+  const rBtn = document.getElementById('calEarBtnRight');
+  const lBtn = document.getElementById('calEarBtnLeft');
+  if (rBtn) { rBtn.style.background = ear==='right' ? 'var(--right-color)' : '#fff'; rBtn.style.color = ear==='right' ? '#fff' : 'var(--right-color)'; }
+  if (lBtn) { lBtn.style.background = ear==='left' ? 'var(--left-color)' : '#fff'; lBtn.style.color = ear==='left' ? '#fff' : 'var(--left-color)'; }
+  if (calibTest.pan) calibTest.pan.pan.value = ear === 'right' ? 1 : -1;
+}
+
+function calibSetFreq(f) {
+  calibTest.freq = +f;
+  if (calibTest.playing && calibTest.osc) {
+    calibTest.osc.frequency.value = calibTest.freq;
+    const g = getGain(calibTest.freq, calibTest.db);
+    calibTest.gain.gain.setTargetAtTime(g, getACtx().currentTime, 0.05);
+  }
+}
+
+function calibStepDb(amount) {
+  calibTest.db = Math.max(-10, Math.min(120, calibTest.db + amount));
+  const el = document.getElementById('calDbDisplay');
+  if (el) el.textContent = calibTest.db;
+  if (calibTest.playing && calibTest.gain) {
+    const g = getGain(calibTest.freq, calibTest.db);
+    calibTest.gain.gain.setTargetAtTime(g, getACtx().currentTime, 0.05);
+  }
+}
+
+function calibTogglePlay() {
+  if (calibTest.playing) calibStopTone(); else calibStartTone();
+}
+
+function calibStartTone() {
+  calibStopTone();
+  const c = getACtx();
+  calibTest.pan = c.createStereoPanner();
+  calibTest.pan.pan.value = calibTest.ear === 'right' ? 1 : -1;
+  calibTest.gain = c.createGain();
+  const g = getGain(calibTest.freq, calibTest.db);
+  calibTest.osc = c.createOscillator();
+  calibTest.osc.type = 'sine';
+  calibTest.osc.frequency.value = calibTest.freq;
+  calibTest.gain.gain.setValueAtTime(0, c.currentTime);
+  calibTest.gain.gain.linearRampToValueAtTime(g, c.currentTime + 0.05);
+  calibTest.osc.connect(calibTest.gain);
+  calibTest.gain.connect(calibTest.pan);
+  calibTest.pan.connect(c.destination);
+  calibTest.osc.start();
+  calibTest.playing = true;
+  const btn = document.getElementById('calPlayBtn');
+  if (btn) { btn.textContent = '⏹ Durdur'; btn.style.background = 'var(--red)'; }
+}
+
+function calibStopTone() {
+  if (calibTest.osc) { try { calibTest.osc.stop(); calibTest.osc.disconnect(); } catch(e){} calibTest.osc = null; }
+  if (calibTest.gain) { try { calibTest.gain.disconnect(); } catch(e){} calibTest.gain = null; }
+  if (calibTest.pan) { try { calibTest.pan.disconnect(); } catch(e){} calibTest.pan = null; }
+  calibTest.playing = false;
+  const btn = document.getElementById('calPlayBtn');
+  if (btn) { btn.textContent = '▶ Çal'; btn.style.background = 'var(--blue)'; }
+}
+
+function calibWriteToMeas() {
+  const id = 'calMeas_' + (calibTest.ear === 'right' ? 'R' : 'L') + '_' + calibTest.freq;
+  const el = document.getElementById(id);
+  if (!el) { showToast('Bu frekans için ölçüm alanı bulunamadı', 'error'); return; }
+  el.value = calibTest.db;
+  const oldBg = el.style.background;
+  el.style.background = '#e8f5e9';
+  setTimeout(() => { el.style.background = oldBg || '#fff'; }, 600);
+  showToast(`${calibTest.freq} Hz ${calibTest.ear==='right'?'Sağ':'Sol'} → ${calibTest.db} dB yazıldı`, 'success');
+}
+
 let calibrationDiffs = {};
 
 function calcCalibration() {
