@@ -1144,7 +1144,7 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
           </select>
           <div style="display:flex;align-items:center;gap:6px">
             <button type="button" onclick="calibStepDb(-5)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:16px;font-weight:700;cursor:pointer">−</button>
-            <div style="min-width:64px;text-align:center;font-family:'DM Serif Display',serif;font-size:19px;color:var(--gray)"><span id="calDbDisplay">40</span> dB</div>
+            <div style="min-width:64px;text-align:center;font-family:'DM Serif Display',serif;font-size:19px;color:var(--gray)"><span id="calDbDisplay">60</span> dB</div>
             <button type="button" onclick="calibStepDb(5)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:16px;font-weight:700;cursor:pointer">+</button>
           </div>
           <button type="button" id="calPlayBtn" onclick="calibTogglePlay()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">▶ Çal</button>
@@ -1745,7 +1745,7 @@ async function googleSpeak(text, onEnd, dbHL) {
   // dB seviyesi: parametre > STATE.speech.speechDb > srtDb > 65
   const targetDb = dbHL || STATE.speech.speechDb || srtDb || 65;
   if (!key) {
-    webSpeechFallback(text, onEnd);
+    webSpeechFallback(text, onEnd, targetDb);
     return;
   }
   try {
@@ -1769,7 +1769,7 @@ async function googleSpeak(text, onEnd, dbHL) {
     if (!response.ok) {
       const err = await response.json();
       console.error('Google TTS error:', JSON.stringify(err));
-      webSpeechFallback(text, onEnd);
+      webSpeechFallback(text, onEnd, targetDb);
       return;
     }
     const data = await response.json();
@@ -1795,11 +1795,11 @@ async function googleSpeak(text, onEnd, dbHL) {
     src.onended = () => { if (onEnd) onEnd(); };
   } catch(e) {
     console.error('Google TTS fetch error:', e);
-    webSpeechFallback(text, onEnd);
+    webSpeechFallback(text, onEnd, targetDb);
   }
 }
 
-function webSpeechFallback(text, onEnd) {
+function webSpeechFallback(text, onEnd, targetDb) {
   if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
   speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
@@ -1807,7 +1807,10 @@ function webSpeechFallback(text, onEnd) {
   utt.lang = ttsCfg.lang;
   utt.rate = ttsCfg.rate;
   utt.pitch = 1.0;
-  utt.volume = 1;
+  // Google TTS yolundakiyle aynı dB→ses şiddeti formülü (65 dB HL referans) —
+  // Web Speech API her zaman sabit sesle çalmasın, seçilen dB'ye göre değişsin
+  const db = (targetDb !== undefined && targetDb !== null) ? targetDb : 65;
+  utt.volume = Math.max(0.02, Math.min(1.0, 0.3 * Math.pow(10, (db - 65) / 20)));
   utt.onend = () => { if (onEnd) onEnd(); };
   utt.onerror = () => { if (onEnd) onEnd(); };
   speechSynthesis.speak(utt);
@@ -2211,6 +2214,7 @@ function setEar(ear) {
   STATE.currentFreq = getActiveFreqs()[0];
   updateFreqGrid();
   updateSavedPointsDisplay();
+  updateMaskHint();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2225,19 +2229,35 @@ function toggleMask() {
   if(STATE.maskActive) updateMaskHint();
 }
 
+// Maskeleme protokolü: test edilen kulak/frekans değiştikçe (veya yeni bir eşik
+// kaydedildikçe) otomatik yeniden hesaplanır ve İlk Maskeleme Seviyesi'ni (IML)
+// maskeleme şiddeti alanına otomatik yazar. Klinisyen buradan itibaren plato
+// yöntemiyle elle ince ayar yapabilir.
 function updateMaskHint() {
+  if (!STATE.maskActive) return;
   const ear = STATE.ear;
   const otherEar = ear === 'right' ? 'left' : 'right';
   const freq = STATE.currentFreq;
   const testTh = STATE.thresholds[ear][freq];
   const otherTh = STATE.thresholds[otherEar][freq];
   const hint = document.getElementById('maskCalcHint');
-  if(!hint) return;
-  if(otherTh !== null && testTh !== null) {
+  const hasBoth = otherTh !== null && otherTh !== undefined && testTh !== null && testTh !== undefined;
+
+  if (hasBoth) {
     const diff = Math.abs(testTh - otherTh);
-    const iml = otherTh + 10; // Initial Masking Level
-    hint.innerHTML = `<strong>AC farkı:</strong> ${diff} dB | <strong>İlk maskeleme (IML):</strong> ${iml} dB | ${diff > 40 ? '<span style="color:var(--red)">⚠ Maskeleme gerekli!</span>' : '<span style="color:var(--success)">✓ Maskeleme gereksiz</span>'}`;
-  } else {
+    // İlk Maskeleme Seviyesi (IML) = maskelenecek (test edilmeyen) kulağın AC eşiği + 10 dB güvenlik payı
+    const iml = Math.min(100, Math.max(20, Math.round((otherTh + 10) / 5) * 5));
+    if (hint) {
+      hint.innerHTML = `<strong>AC farkı:</strong> ${diff} dB | <strong>İlk maskeleme (IML):</strong> ${iml} dB | ${diff > 40 ? '<span style="color:var(--red)">⚠ Maskeleme gerekli!</span>' : '<span style="color:var(--success)">✓ Maskeleme gereksiz</span>'}`;
+    }
+    // IML'i maskeleme şiddeti alanına otomatik yaz — klinisyen buradan plato yöntemiyle ayarlar
+    STATE.maskDb = iml;
+    const slider = document.getElementById('maskDbSlider');
+    const val = document.getElementById('maskDbVal');
+    if (slider) slider.value = iml;
+    if (val) val.textContent = iml + ' dB';
+    if (STATE.maskPlaying) updateMaskGain();
+  } else if (hint) {
     hint.textContent = 'Her iki kulağın AC eşikleri kaydedildiğinde maskeleme önerisi hesaplanır.';
   }
 }
@@ -2324,6 +2344,7 @@ function selectFreq(f) {
   stopAll();
   document.querySelectorAll('.freq-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('fBtn_'+f).classList.add('active');
+  updateMaskHint();
 }
 function updateFreqGrid() {
   const freqs = getActiveFreqs();
@@ -2525,6 +2546,7 @@ function savePoint() {
   updateSavedPointsDisplay();
   calcPTA();
   renderAudiogram();
+  updateMaskHint();
 
   // Otomatik bir sonraki frekansa geç
   const freqs = getActiveFreqs();
@@ -4274,7 +4296,7 @@ function initTinnitusScreen(){
 // Kalibrasyon sekmesinden çıkmadan tonu çalıp "Ölçüm" sütununa yazabilmek için
 // Saf Ses ekranının STATE'ine dokunmayan, bağımsız bir mini ses motoru.
 // ════════════════════════════════════════════════════════════
-const calibTest = { ear:'right', freq:1000, db:40, playing:false, osc:null, gain:null, pan:null };
+const calibTest = { ear:'right', freq:1000, db:60, playing:false, osc:null, gain:null, pan:null };
 
 function calibSetEar(ear) {
   calibTest.ear = ear;
@@ -4308,25 +4330,35 @@ function calibTogglePlay() {
   if (calibTest.playing) calibStopTone(); else calibStartTone();
 }
 
-function calibStartTone() {
+async function calibStartTone() {
   calibStopTone();
-  const c = getACtx();
-  calibTest.pan = c.createStereoPanner();
-  calibTest.pan.pan.value = calibTest.ear === 'right' ? 1 : -1;
-  calibTest.gain = c.createGain();
-  const g = getGain(calibTest.freq, calibTest.db);
-  calibTest.osc = c.createOscillator();
-  calibTest.osc.type = 'sine';
-  calibTest.osc.frequency.value = calibTest.freq;
-  calibTest.gain.gain.setValueAtTime(0, c.currentTime);
-  calibTest.gain.gain.linearRampToValueAtTime(g, c.currentTime + 0.05);
-  calibTest.osc.connect(calibTest.gain);
-  calibTest.gain.connect(calibTest.pan);
-  calibTest.pan.connect(c.destination);
-  calibTest.osc.start();
-  calibTest.playing = true;
-  const btn = document.getElementById('calPlayBtn');
-  if (btn) { btn.textContent = '⏹ Durdur'; btn.style.background = 'var(--red)'; }
+  try {
+    const c = getACtx();
+    // Sayfaya girip doğrudan Kalibrasyon'a gelindiğinde AudioContext hâlâ
+    // "suspended" olabilir (tarayıcı otomatik oynatma kısıtlaması) — tona
+    // başlamadan önce gerçekten açılmasını bekliyoruz, yoksa ses sessizce çalınmaz.
+    if (c.state === 'suspended') { await c.resume(); }
+    calibTest.pan = c.createStereoPanner();
+    calibTest.pan.pan.value = calibTest.ear === 'right' ? 1 : -1;
+    calibTest.gain = c.createGain();
+    const g = getGain(calibTest.freq, calibTest.db);
+    calibTest.osc = c.createOscillator();
+    calibTest.osc.type = 'sine';
+    calibTest.osc.frequency.value = calibTest.freq;
+    calibTest.gain.gain.setValueAtTime(0, c.currentTime);
+    calibTest.gain.gain.linearRampToValueAtTime(g, c.currentTime + 0.05);
+    calibTest.osc.connect(calibTest.gain);
+    calibTest.gain.connect(calibTest.pan);
+    calibTest.pan.connect(c.destination);
+    calibTest.osc.start();
+    calibTest.playing = true;
+    const btn = document.getElementById('calPlayBtn');
+    if (btn) { btn.textContent = '⏹ Durdur'; btn.style.background = 'var(--red)'; }
+  } catch(e) {
+    console.error('Kalibrasyon tonu başlatılamadı:', e);
+    showToast('Ses başlatılamadı — cihazın sesini açık tutup tekrar deneyin: ' + e.message, 'error');
+    calibTest.playing = false;
+  }
 }
 
 function calibStopTone() {
