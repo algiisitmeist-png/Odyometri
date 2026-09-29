@@ -436,6 +436,8 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
       </div>
 
       <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="showScreen('sPatient')">+ Yeni Hasta</button>
+      <button class="btn btn-gray btn-sm" style="margin-top:8px;width:100%" onclick="triggerImportFile()" title="Başka bir cihazdan dışa aktarılan hasta dosyasını (.json) içe aktarır">📥 Hasta Dosyası İçe Aktar</button>
+      <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
       <button class="btn btn-gray btn-sm" style="margin-top:8px;width:100%" onclick="mergeDuplicatesNow()" title="Aynı ad+soyad+doğum tarihine sahip kayıtları tek kayıtta birleştirir">🔧 Mükerrer Kayıtları Birleştir</button>
     </div>
 
@@ -509,7 +511,37 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#1a1a2e;font
 
     <!-- Maskeleme -->
     <div class="ctrl-section">
-      <h3>Maskeleme</h3>
+      <h3 style="display:flex;align-items:center;gap:6px">
+        Maskeleme
+        <span class="info-tooltip-wrap">
+          <button class="info-btn" type="button">i</button>
+          <div class="tooltip-popup" style="left:18px;top:-10px">
+            <h4>⚠ Maskeleme Protokolü <span style="font-size:10px;color:var(--gray-mid);font-weight:400">(Hood Plato Yöntemi)</span></h4>
+            <div class="tp-section">
+              <div class="tp-title">Tanım</div>
+              Test edilmeyen (karşı) kulağın sese katılıp yanlış — aslında karşı kulağa ait — bir eşik ölçülmesini (cross-hearing/gölge eğri)
+              önlemek için o kulağa dar bantlı gürültü (narrow-band noise) verilir.
+            </div>
+            <div class="tp-section">
+              <div class="tp-title">Ne Zaman Gerekli</div>
+              • Hava yolunda (AC): iki kulak arası fark &gt; 40 dB (interaural attenuation)<br>
+              • Kemik yolunda (BC): genellikle her zaman gerekir (interaural attenuation ~0 dB kabul edilir)<br>
+              • Hava-kemik aralığı (AC-BC gap) ≥ 10 dB ise test edilen kulakta da düşünülmeli
+            </div>
+            <div class="tp-section">
+              <div class="tp-title">Protokol</div>
+              1. İlk Maskeleme Seviyesi (IML) = karşı kulağın AC eşiği + 10 dB — sistem bunu frekans/kulak değiştikçe otomatik hesaplayıp maskeleme şiddeti alanına yazar<br>
+              2. Test kulağının eşiğini bu maskeleme ile yeniden ölç<br>
+              3. Maskelemeyi 10 dB artır, eşik değişiyor mu izle<br>
+              4. Eşik 3 ardışık maskeleme artışında sabit kalırsa (plato) — o gerçek eşiktir<br>
+              5. Maskeleme artınca eşik de yükselmeye devam ederse (overmasking) — bir önceki plato değerine dön
+            </div>
+            <div style="background:#fff5f5;border-radius:6px;padding:6px 8px;font-size:11px;color:var(--red)">
+              ⚠ <b>Dikkat:</b> Aşırı maskeleme (overmasking) yanlış yüksek eşiklere yol açar — dar/kaçak bir plato görürseniz maskeleme seviyesini sorgulayın.
+            </div>
+          </div>
+        </span>
+      </h3>
       <div class="mask-toggle">
         <label>Maskeleme Aktif</label>
         <label class="toggle-sw">
@@ -1956,7 +1988,8 @@ function showPatientDetails(patient) {
         <div><span style="color:var(--gray-mid)">Şikayet:</span><br><strong>${patient.complaint || '—'}</strong></div>
       </div>
 
-      <button class="btn btn-success" style="width:100%;margin-bottom:20px" onclick="startNewTest()">+ Yeni Test Başlat</button>
+      <button class="btn btn-success" style="width:100%;margin-bottom:10px" onclick="startNewTest()">+ Yeni Test Başlat</button>
+      <button class="btn btn-gray btn-sm" style="width:100%;margin-bottom:20px" onclick="exportPatientData()" title="Bu hastanın tüm bilgilerini ve test oturumlarını dosya olarak dışa aktarır">📤 Hastayı Dışa Aktar</button>
 
       <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);margin-bottom:8px">Eski Oturumlar</div>
       <select id="oldSessionsDropdown" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin-bottom:16px" onchange="onSessionSelected(this.value)">
@@ -2200,6 +2233,115 @@ async function mergeDuplicatesNow() {
   } else {
     showToast('Birleştirme hatası: ' + result.error, 'error');
   }
+}
+
+// ════════════════════════════════════════════════════════════
+// HASTA DIŞA/İÇE AKTARMA — tek dosya (.json) olarak paylaşım
+// ════════════════════════════════════════════════════════════
+function exportPatientData() {
+  const patient = STATE.selectedPatient;
+  if (!patient) { showToast('Önce bir hasta seçin', 'error'); return; }
+  const tests = STATE.selectedPatientTests || [];
+
+  const exportObj = {
+    __type: 'algi-odyometri-patient-export',
+    __version: 1,
+    exportedAt: new Date().toISOString(),
+    patient: {
+      firstName: patient.firstName || '',
+      lastName: patient.lastName || '',
+      dob: patient.dob || '',
+      gender: patient.gender || '',
+      id: patient.id || '',
+      complaint: patient.complaint || '',
+      examiner: patient.examiner || '',
+      history: patient.history || '',
+      important: patient.important || ''
+    },
+    // Firestore Timestamp JSON'a doğrudan yazılamaz — ISO metne çeviriyoruz,
+    // içe aktarırken tekrar tarihe (ve orada Firestore Timestamp'e) dönüştürülecek
+    tests: tests.map(t => ({
+      date: (t.date && typeof t.date === 'object' && t.date.seconds !== undefined)
+        ? new Date(t.date.seconds * 1000).toISOString()
+        : (t.date || null),
+      examiner: t.examiner || '',
+      notes: t.notes || '',
+      thresholds: t.thresholds || {},
+      maskedThresholds: t.maskedThresholds || {},
+      noResponse: t.noResponse || {},
+      ucl: t.ucl || {},
+      speechSRT: t.speechSRT || {},
+      speechScores: t.speechScores || {},
+      tinnitus: t.tinnitus || {}
+    }))
+  };
+
+  const json = JSON.stringify(exportObj, null, 2);
+  const clean = s => (s || '').toString().trim().replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ]+/g, '_');
+  const filename = `${clean(patient.firstName) || 'hasta'}${patient.lastName ? '_' + clean(patient.lastName) : ''}_odyometri.json`;
+  const blob = new Blob([json], { type: 'application/json' });
+
+  // iPad/telefonda varsa native paylaşım sayfasını (AirDrop, Mail, Mesajlar, WhatsApp...) aç
+  let file = null;
+  try { file = new File([blob], filename, { type: 'application/json' }); } catch(e) {}
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename, text: `${patient.firstName} ${patient.lastName} — Odyometri kaydı` })
+      .catch(err => { if (err && err.name !== 'AbortError') downloadBlob(blob, filename); });
+  } else {
+    downloadBlob(blob, filename);
+  }
+  showToast(`${tests.length} oturumla birlikte dışa aktarıldı`, 'success');
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function triggerImportFile() {
+  const input = document.getElementById('importFileInput');
+  if (input) { input.value = ''; input.click(); }
+}
+
+function handleImportFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    let data;
+    try {
+      data = JSON.parse(reader.result);
+    } catch (e) {
+      showToast('Dosya okunamadı — geçerli bir JSON dosyası değil', 'error');
+      return;
+    }
+    if (!data || data.__type !== 'algi-odyometri-patient-export' || !data.patient) {
+      showToast('Bu dosya bir Odyometri hasta dışa aktarım dosyası değil', 'error');
+      return;
+    }
+    const p = data.patient;
+    const tests = Array.isArray(data.tests) ? data.tests : [];
+    showToast(`İçe aktarılıyor: ${p.firstName || ''} ${p.lastName || ''} (${tests.length} oturum)...`, 'info');
+    try {
+      const result = await window.importPatientRecord(p, tests);
+      if (result.success) {
+        showToast(`✓ ${p.firstName || ''} ${p.lastName || ''} içe aktarıldı (${result.testsImported} oturum)`, 'success');
+        loadPatientList();
+      } else {
+        showToast('İçe aktarma hatası: ' + result.error, 'error');
+      }
+    } catch(e) {
+      showToast('İçe aktarma hatası: ' + e.message, 'error');
+    }
+  };
+  reader.onerror = () => showToast('Dosya okunamadı', 'error');
+  reader.readAsText(file);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4950,6 +5092,60 @@ window.loadPatientTests = async function(fbId) {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch(e) {
     return [];
+  }
+};
+
+// Başka bir cihazdan dışa aktarılan bir hasta dosyasını içe aktarır.
+// Hasta zaten kayıtlıysa (ad+soyad+doğum tarihi ya da TC No eşleşirse) mükerrer
+// oluşturmadan aynı kayda test oturumlarını ekler; yoksa yeni hasta oluşturur.
+window.importPatientRecord = async function(patientData, testsArray) {
+  try {
+    let patientRef = await findExistingPatientRef(patientData);
+    const payload = {
+      firstName: patientData.firstName || '',
+      lastName: patientData.lastName || '',
+      firstNameKey: normKey(patientData.firstName),
+      lastNameKey: normKey(patientData.lastName),
+      dob: patientData.dob || '',
+      gender: patientData.gender || '',
+      id: patientData.id || '',
+      complaint: patientData.complaint || '',
+      examiner: patientData.examiner || '',
+      history: patientData.history || '',
+      important: patientData.important || '',
+      updatedAt: serverTimestamp()
+    };
+    if (!patientRef) {
+      payload.createdAt = serverTimestamp();
+      patientRef = await addDoc(collection(db, 'patients'), payload);
+    } else {
+      await updateDoc(patientRef, payload);
+    }
+    let testsImported = 0;
+    for (const t of (testsArray || [])) {
+      // Dışa aktarımda ISO metne çevrilen tarih — burada tekrar Date nesnesine
+      // dönüştürülüyor, Firestore bunu otomatik Timestamp olarak yazar.
+      // Tarih yoksa/okunamazsa şimdiki zaman kullanılır.
+      const parsedDate = t.date ? new Date(t.date) : null;
+      const validDate = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate : serverTimestamp();
+      await addDoc(collection(patientRef, 'tests'), {
+        date: validDate,
+        examiner: t.examiner || '',
+        notes: t.notes || '',
+        thresholds: t.thresholds || {},
+        maskedThresholds: t.maskedThresholds || {},
+        noResponse: t.noResponse || {},
+        ucl: t.ucl || {},
+        speechSRT: t.speechSRT || {},
+        speechScores: t.speechScores || {},
+        tinnitus: t.tinnitus || {}
+      });
+      testsImported++;
+    }
+    return { success: true, patientId: patientRef.id, testsImported };
+  } catch(e) {
+    console.error('Import error:', e);
+    return { success: false, error: e.message };
   }
 };
 
