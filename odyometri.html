@@ -1411,16 +1411,17 @@ const BASE_GAINS_1K = {
 
 // ISO 389-8 RETSPL + AKG N60 frekans yanıtı düzeltme çarpanları
 // [250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 6kHz, 8kHz]
+// 29.09.2026: Referans (kalibre cihaz) vs. Uygulama eşik ölçümüne göre yeniden kalibre edildi
 const FREQ_MULTS = {
   125:  15.85,  // çok düşük frekans — yüksek RETSPL düzeltme
-  250:  7.079,
-  500:  1.496,
-  1000: 1.000,
-  2000: 0.668,
+  250:  2.2386,
+  500:  2.6603,
+  1000: 0.3162,
+  2000: 0.3756,
   3000: 0.750,
   4000: 0.891,
-  6000: 0.473,
-  8000: 0.944,
+  6000: 0.266,
+  8000: 0.5309,
   9000: 1.100,
   10000: 1.300,
   11200: 1.500,
@@ -4544,7 +4545,7 @@ function calcCalibration() {
     const measR = parseFloat(document.getElementById('calMeas_R_'+f)?.value);
     const measL = parseFloat(document.getElementById('calMeas_L_'+f)?.value);
     if(isNaN(refR)||isNaN(measR)) return;
-    const diffR = refR - measR; // Pozitif = sistem düşük çalıyor, gain artır
+    const diffR = refR - measR; // Pozitif = uygulama eşiği referanstan düşük çıktı → sistem fazla yüksek sesle çalıyor, gain azalt
     const diffL = (!isNaN(refL)&&!isNaN(measL)) ? refL - measL : diffR;
     const avg = Math.round((diffR + diffL) / 2);
     calibrationDiffs[f] = avg;
@@ -4573,8 +4574,8 @@ function applyCalibration() {
     if(calibrationDiffs[f] === undefined) return;
     const diff = calibrationDiffs[f];
     const currentMult = FREQ_MULTS[f] || 1.0;
-    // dB farkını lineer çarpana çevir
-    const correction = Math.pow(10, diff/20);
+    // dB farkını lineer çarpana çevir (diff>0 → uygulama fazla yüksek sesle çalıyor → gain azalt)
+    const correction = Math.pow(10, -diff/20);
     FREQ_MULTS[f] = currentMult * correction;
   });
   // localStorage'a kaydet
